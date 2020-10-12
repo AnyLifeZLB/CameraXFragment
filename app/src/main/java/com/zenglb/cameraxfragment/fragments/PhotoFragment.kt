@@ -33,4 +33,5 @@ class PhotoFragment internal constructor() : Fragment() {
             }
         }
     }
+
 }
