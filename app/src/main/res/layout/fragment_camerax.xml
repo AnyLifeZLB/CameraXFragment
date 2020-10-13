@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".test.CameraXFragment">
+    tools:context=".main.CameraXFragment">
 
     <androidx.camera.view.PreviewView
         android:id="@+id/camera_preview"

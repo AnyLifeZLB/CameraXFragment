@@ -6,28 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context=".test.MainActivity">
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/setting_layout"
-        android:background="@color/cardview_dark_background"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="@dimen/rect_button_margin"
-            android:text="这里是设置区域"
-            android:textColor="@android:color/holo_red_dark"
-            android:textSize="22sp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <!-- 上面再来一排的控制按钮，设置按钮-->
+    tools:context=".CameraXActivity">
 
     <FrameLayout
         android:id="@+id/fragment_container"
@@ -39,11 +18,35 @@
         tools:layout_editor_absoluteX="176dp" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/setting_layout"
+        android:background="#77336699"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/rect_button_margin"
+            android:text=" 点击拍照，长按摄像 [Testing]"
+            android:textColor="@android:color/holo_red_dark"
+            android:textSize="18sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/camera_control_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/zhihu_preview_bottom_toolbar_apply_text_disable"
-        android:padding="15dp"
+        android:paddingLeft="15dp"
+        android:paddingRight="15dp"
+        android:paddingTop="7dp"
+        android:paddingBottom="7dp"
+
         app:layout_constraintBottom_toBottomOf="parent">
 
         <!-- Camera control and gallery buttons -->
@@ -60,7 +63,7 @@
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/ic_switch" />
 
-        <com.zenglb.cameraxfragment.captureView.CaptureButton
+        <com.zenglb.cameraxfragment.main.CaptureButton
             android:id="@+id/capture_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

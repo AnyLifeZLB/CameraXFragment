@@ -1,4 +1,4 @@
-package com.zenglb.cameraxfragment.captureView
+package com.zenglb.cameraxfragment.main
 
 
 /**

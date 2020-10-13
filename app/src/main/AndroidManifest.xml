@@ -23,7 +23,11 @@
         android:requestLegacyExternalStorage="true"
         tools:ignore="AllowBackup">
 
-        <activity android:name=".test.MainActivity">
+
+
+
+
+        <activity android:name=".CameraXActivity">
             <!-- Main app intent filter -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

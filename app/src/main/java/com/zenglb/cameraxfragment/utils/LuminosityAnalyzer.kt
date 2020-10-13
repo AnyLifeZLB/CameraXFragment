@@ -6,9 +6,9 @@ import java.nio.ByteBuffer
 import java.util.ArrayDeque
 
 /**
- * 图像分析，一般是不需要的，没有那么高端的应用场景
+ * 图像分析，一般是不需要的
  *
- * <p>All we need to do is override the function `analyze` with our desired operations. Here,
+ * All we need to do is override the function `analyze` with our desired operations. Here,
  * we compute the average luminosity of the image by looking at the Y plane of the YUV frame.
  */
 

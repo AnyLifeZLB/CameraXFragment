@@ -1,4 +1,4 @@
-package com.zenglb.cameraxfragment.test
+package com.zenglb.cameraxfragment.main
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -13,9 +13,7 @@ import android.hardware.display.DisplayManager
 import android.media.MediaRecorder
 import android.media.MediaScannerConnection
 import android.net.Uri
-import android.os.Build
-import android.os.Bundle
-import android.os.Environment
+import android.os.*
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.KeyEvent
@@ -35,8 +33,7 @@ import androidx.core.content.ContextCompat.checkSelfPermission
 import androidx.core.net.toFile
 import androidx.fragment.app.Fragment
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import com.zenglb.cameraxfragment.KEY_EVENT_ACTION
-import com.zenglb.cameraxfragment.KEY_EVENT_EXTRA
+
 import com.zenglb.cameraxfragment.R
 import com.zenglb.cameraxfragment.listener.OperateListener
 import com.zenglb.cameraxfragment.utils.ANIMATION_FAST_MILLIS
@@ -49,6 +46,10 @@ import java.util.concurrent.Executors
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
+
+
+const val KEY_CAMERA_EVENT_ACTION = "key_camera_event_action"
+const val KEY_CAMERA_EVENT_EXTRA = "key_camera_event_extra"
 
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
 private const val ARG_PARAM1 = "param1"
@@ -91,10 +92,6 @@ class CameraXFragment : Fragment() {
 
     private lateinit var cameraSelector: CameraSelector
 
-
-    private var isRecording: Boolean = false
-
-
     private var displayId: Int = -1
     private var lensFacing: Int = CameraSelector.LENS_FACING_BACK
     private var preview: Preview? = null
@@ -117,7 +114,7 @@ class CameraXFragment : Fragment() {
     //音量下降按钮接收器用于触发快门
     private val volumeDownReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            when (intent.getIntExtra(KEY_EVENT_EXTRA, KeyEvent.KEYCODE_UNKNOWN)) {
+            when (intent.getIntExtra(KEY_CAMERA_EVENT_EXTRA, KeyEvent.KEYCODE_UNKNOWN)) {
                 // When the volume down button is pressed, simulate a shutter button click
                 KeyEvent.KEYCODE_VOLUME_DOWN -> {
                     takePhoto()
@@ -128,6 +125,7 @@ class CameraXFragment : Fragment() {
 
     /**
      * 横竖屏切换
+     *
      * We need a display listener for orientation changes that do not trigger a configuration
      * change, for example if we choose to override config change in manifest or for 180-degree
      * orientation changes.
@@ -142,60 +140,6 @@ class CameraXFragment : Fragment() {
                 imageAnalyzer?.targetRotation = view.display.rotation
             }
         } ?: Unit
-    }
-
-    /**
-     * onResume，回来需要检查一下权限是不是别关闭 回收了之类的
-     *
-     * private const val PERMISSIONS_REQUEST_CODE = 10
-     */
-    override fun onResume() {
-        super.onResume()
-
-        if (!hasPermissions(requireContext())) {
-            // Request camera-related permissions
-            requestPermissions(REQUIRED_PERMISSIONS, PERMISSIONS_REQUEST_CODE)
-        } else {
-            setUpCamera(0)
-        }
-    }
-
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int, permissions: Array<String>, grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == PERMISSIONS_REQUEST_CODE) {
-            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                //这里重新初始化相机 ？？？
-                setUpCamera(0)
-            } else {
-                Toast.makeText(context, "Permission request denied", Toast.LENGTH_LONG).show()
-            }
-        }
-    }
-
-
-    /**
-     * 销毁后各种处理后事啊
-     *
-     */
-    override fun onDestroyView() {
-        super.onDestroyView()
-        // Shut down our background executor
-        cameraExecutor.shutdown()
-        // Unregister the broadcast receivers and listeners
-        broadcastManager.unregisterReceiver(volumeDownReceiver)
-        displayManager.unregisterDisplayListener(displayListener)
-    }
-
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_camerax, container, false)
     }
 
 
@@ -216,7 +160,7 @@ class CameraXFragment : Fragment() {
         broadcastManager = LocalBroadcastManager.getInstance(view.context)
 
         // 设置意图过滤器，从我们的main activity接收事件
-        val filter = IntentFilter().apply { addAction(KEY_EVENT_ACTION) }
+        val filter = IntentFilter().apply { addAction(KEY_CAMERA_EVENT_ACTION) }
 
         broadcastManager.registerReceiver(volumeDownReceiver, filter)
 
@@ -242,7 +186,7 @@ class CameraXFragment : Fragment() {
      *
      * Initialize CameraX, and prepare to bind the camera use cases
      */
-    private fun setUpCamera(captureMode: Int) {
+    private fun setUpCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
         cameraProviderFuture.addListener(Runnable {
             //CameraProvider
@@ -256,7 +200,8 @@ class CameraXFragment : Fragment() {
             }
 
             // Build and bind the camera use cases
-            bindCameraUseCases(captureMode)
+            initCameraUseCases()
+
         }, ContextCompat.getMainExecutor(requireContext()))
     }
 
@@ -268,7 +213,7 @@ class CameraXFragment : Fragment() {
      *
      * Declare and bind preview, capture and analysis use cases
      */
-    private fun bindCameraUseCases(captureMode: Int) {
+    private fun initCameraUseCases() {
         // 获得屏幕的尺寸数据来设置全屏的分辨率
         // Get screen metrics used to setup camera for full screen resolution
         val metrics = DisplayMetrics().also { cameraPreview.display.getRealMetrics(it) }
@@ -310,29 +255,11 @@ class CameraXFragment : Fragment() {
             .setAudioRecordSource(MediaRecorder.AudioSource.MIC)//设置音频源麦克风
             .build()
 
-        // 再次重新绑定前应该先解绑
-        cameraProvider?.unbindAll()
 
-        try {
-            //默认是0 ，是拍照吧
-            if (captureMode == 0) {
-                //目前一次无法绑定拍照和摄像一起
-                camera = cameraProvider?.bindToLifecycle(
-                    this, cameraSelector, preview, imageCapture
-                )
-            } else {
-                //目前一次无法绑定拍照和摄像一起
-                camera = cameraProvider?.bindToLifecycle(
-                    this, cameraSelector, preview, videoCapture
-                )
-            }
+        bindCameraUseCase(0)
 
-
-            // Attach the viewfinder's surface provider to preview use case
-            preview?.setSurfaceProvider(cameraPreview.surfaceProvider)
-        } catch (exc: Exception) {
-            Log.e(TAG, "Use case binding failed", exc)
-        }
+        // Attach the viewfinder's surface provider to preview use case
+        preview?.setSurfaceProvider(cameraPreview.surfaceProvider)
 
     }
 
@@ -364,33 +291,49 @@ class CameraXFragment : Fragment() {
      *
      */
     public fun stopTakeVideo() {
-
         videoCapture?.stopRecording()
-
     }
 
 
-    /**
-     * 拍摄视频，目前还没有稳定，不过哪里会有稳定的东西呢？
-     *
-     */
-    public fun takeVideo() {
+    private fun bindCameraUseCase(captureMode: Int) {
 
         // 再次重新绑定前应该先解绑
         cameraProvider?.unbindAll()
 
         try {
             //目前一次无法绑定拍照和摄像一起
-            camera = cameraProvider?.bindToLifecycle(
-                this, cameraSelector, preview, videoCapture
-            )
+            when (captureMode) {
+                0 -> camera = cameraProvider?.bindToLifecycle(
+                    this, cameraSelector, preview, imageCapture
+                )
+                1 -> camera = cameraProvider?.bindToLifecycle(
+                    this, cameraSelector, preview, videoCapture
+                )
+            }
 
-            // Attach the viewfinder's surface provider to preview use case
-            preview?.setSurfaceProvider(cameraPreview.surfaceProvider)
+//            // Attach the viewfinder's surface provider to preview use case
+//            preview?.setSurfaceProvider(cameraPreview.surfaceProvider)
         } catch (exc: Exception) {
             Log.e(TAG, "Use case binding failed", exc)
         }
 
+    }
+
+
+    /**
+     * 拍摄视频移动手指控制缩放,支持中...
+     *
+     */
+    public fun zoomTakeVideo(){
+//        videoCapture?
+    }
+
+    /**
+     * 拍摄视频，目前还没有稳定，不过哪里会有稳定的东西呢？
+     *
+     */
+    public fun takeVideo() {
+        bindCameraUseCase(1)
 
         val videoFile = createMediaFile(outputDirectory, FILENAME, VIDEO_EXTENSION)
 
@@ -410,21 +353,57 @@ class CameraXFragment : Fragment() {
             outputOptions,
             Executors.newSingleThreadExecutor(),
             object : VideoCapture.OnVideoSavedCallback {
-
                 override fun onVideoSaved(outputFileResults: VideoCapture.OutputFileResults) {
                     Log.e(TAG, "onVideoSaved: ${outputFileResults.savedUri.toString()}")
-                    isRecording = false
+                    flushMedia(outputFileResults.savedUri)
+
+                    val builder: StrictMode.VmPolicy.Builder = StrictMode.VmPolicy.Builder()
+                    StrictMode.setVmPolicy(builder.build())
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        builder.detectFileUriExposure()
+                    }
+
+                    val intent = Intent(Intent.ACTION_VIEW)
+                    intent.setDataAndType(outputFileResults.savedUri, "video/*")
+                    startActivity(intent)
+
+                    Handler(Looper.getMainLooper()).post(Runnable {
+                        bindCameraUseCase(0)
+                    })
                 }
 
                 override fun onError(error: Int, message: String, cause: Throwable?) {
-                    Log.e(TAG, "onError: $error" + "  message: $message" + "  cause: $cause")
-                    isRecording = false
+                    Log.e(TAG, "onError: $error     message: $message    cause: $cause")
+                    Handler(Looper.getMainLooper()).post(Runnable {
+                        bindCameraUseCase(0)
+                    })
                 }
-
             })
-
     }
 
+
+    /**
+     * 让媒体资源马上可以浏览
+     */
+    private fun flushMedia(savedUri: Uri?) {
+        //刷新手机图片，App 才能预览到最新的图
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+            requireActivity().sendBroadcast(
+                Intent(android.hardware.Camera.ACTION_NEW_PICTURE, savedUri)
+            )
+        }
+
+        val mimeType = MimeTypeMap.getSingleton()
+            .getMimeTypeFromExtension(savedUri?.toFile()?.extension)
+        MediaScannerConnection.scanFile(
+            context,
+            arrayOf(savedUri?.toFile()?.absolutePath),
+            arrayOf(mimeType)
+        ) { _, uri ->
+            Log.d(TAG, "Image capture scanned into media store: $uri")
+        }
+
+    }
 
     /**
      * 切换前后摄像头
@@ -437,7 +416,7 @@ class CameraXFragment : Fragment() {
             CameraSelector.LENS_FACING_FRONT
         }
         // Re-bind use cases to update selected camera
-        bindCameraUseCases(0)
+        initCameraUseCases()
     }
 
 
@@ -446,13 +425,10 @@ class CameraXFragment : Fragment() {
      *
      */
     public fun takePhoto() {
-
-
-        indicateTakePhoto()
+        indicateSuccess()
 
         // Get a stable reference of the modifiable image capture use case
         imageCapture?.let { imageCapture ->
-
             //todo 路径和照片名字的前缀要可以定制
             val photoFile = createMediaFile(outputDirectory, FILENAME, PHOTO_EXTENSION)
 
@@ -473,39 +449,21 @@ class CameraXFragment : Fragment() {
             // Setup image capture listener which is triggered after photo has been taken
             imageCapture.takePicture(
                 outputOptions, cameraExecutor, object : ImageCapture.OnImageSavedCallback {
-
                     override fun onError(exc: ImageCaptureException) {
                         Log.e(TAG, "Photo capture failed: ${exc.message}", exc)
                     }
 
                     override fun onImageSaved(output: ImageCapture.OutputFileResults) {
                         val savedUri = output.savedUri ?: Uri.fromFile(photoFile)
-
                         operateListener.onPhotoTaken(savedUri.toString())
-
-                        //刷新手机图片，App 才能预览到最新的图
-                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
-                            requireActivity().sendBroadcast(
-                                Intent(android.hardware.Camera.ACTION_NEW_PICTURE, savedUri)
-                            )
-                        }
-
-                        val mimeType = MimeTypeMap.getSingleton()
-                            .getMimeTypeFromExtension(savedUri.toFile().extension)
-                        MediaScannerConnection.scanFile(
-                            context,
-                            arrayOf(savedUri.toFile().absolutePath),
-                            arrayOf(mimeType)
-                        ) { _, uri ->
-                            Log.d(TAG, "Image capture scanned into media store: $uri")
-                        }
+                        flushMedia(output.savedUri)
 
                     }
                 })
         }
     }
 
-    private fun indicateTakePhoto() {
+    private fun indicateSuccess() {
         // 显示一个闪光动画来告知用户照片已经拍好了。在华为等手机上好像有点问题啊 cameraPreview
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             cameraUIContainer.postDelayed({
@@ -538,8 +496,6 @@ class CameraXFragment : Fragment() {
      *
      */
     public fun canSwitchCamera(): Boolean {
-        Log.d("CameraX", "long")
-
         return hasBackCamera() && hasFrontCamera()
     }
 
@@ -551,12 +507,67 @@ class CameraXFragment : Fragment() {
         return cameraProvider?.hasCamera(CameraSelector.DEFAULT_BACK_CAMERA) ?: false
     }
 
-
     /**
      * 检查设备是否有前置摄像头
      */
     private fun hasFrontCamera(): Boolean {
         return cameraProvider?.hasCamera(CameraSelector.DEFAULT_FRONT_CAMERA) ?: false
+    }
+
+
+    /**
+     * onResume，回来需要检查一下权限是不是别关闭 回收了之类的
+     *
+     * private const val PERMISSIONS_REQUEST_CODE = 10
+     */
+    override fun onResume() {
+        super.onResume()
+
+        if (!hasPermissions(requireContext())) {
+            // Request camera-related permissions
+            requestPermissions(REQUIRED_PERMISSIONS, PERMISSIONS_REQUEST_CODE)
+        } else {
+            setUpCamera()
+        }
+    }
+
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int, permissions: Array<String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == PERMISSIONS_REQUEST_CODE) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                //这里重新初始化相机 ？？？
+                setUpCamera()
+            } else {
+                Toast.makeText(context, "Permission request denied", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+
+    /**
+     * 销毁后各种处理后事啊
+     *
+     */
+    override fun onDestroyView() {
+        super.onDestroyView()
+        // Shut down our background executor
+        cameraExecutor.shutdown()
+        // Unregister the broadcast receivers and listeners
+        broadcastManager.unregisterReceiver(volumeDownReceiver)
+        displayManager.unregisterDisplayListener(displayListener)
+    }
+
+
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        // Inflate the layout for this fragment
+        return inflater.inflate(R.layout.fragment_camerax, container, false)
     }
 
 

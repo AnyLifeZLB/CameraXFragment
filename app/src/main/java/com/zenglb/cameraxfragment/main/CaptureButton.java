@@ -1,4 +1,4 @@
-package com.zenglb.cameraxfragment.captureView;
+package com.zenglb.cameraxfragment.main;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;

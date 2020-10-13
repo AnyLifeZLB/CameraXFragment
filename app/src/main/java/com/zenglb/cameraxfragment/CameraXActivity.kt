@@ -1,4 +1,4 @@
-package com.zenglb.cameraxfragment.test
+package com.zenglb.cameraxfragment
 
 import android.app.Activity
 import android.content.Intent
@@ -10,43 +10,46 @@ import android.view.KeyEvent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.bumptech.glide.Glide
-import com.zenglb.cameraxfragment.KEY_EVENT_ACTION
-import com.zenglb.cameraxfragment.KEY_EVENT_EXTRA
-import com.zenglb.cameraxfragment.R
-import com.zenglb.cameraxfragment.captureView.CaptureListener
 import com.zenglb.cameraxfragment.listener.OperateListener
+import com.zenglb.cameraxfragment.main.CameraXFragment
+import com.zenglb.cameraxfragment.main.CaptureListener
+import com.zenglb.cameraxfragment.main.KEY_CAMERA_EVENT_ACTION
+import com.zenglb.cameraxfragment.main.KEY_CAMERA_EVENT_EXTRA
 import com.zhihu.matisse.Matisse
 import com.zhihu.matisse.MimeType
 import com.zhihu.matisse.engine.impl.GlideEngine
-import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.activity_camera_x.*
 
 
 /**
  * 演示如何使用CameraX Fragment
  *
  *
- * 图片视频选择器：https://www.jianshu.com/p/aab0b0e42824
- * https://github.com/LuckSiege/PictureSelector/issues
+ * 1.CameraX Extensions 是可选插件，您可以在支持的设备上添加效果。这些效果包括人像、HDR、夜间模式和美颜
+ * 2.图片分析：无缝访问缓冲区以便在算法中使用，例如传入 MLKit
+ * 3.
+ *
  *
  */
-class MainActivity : AppCompatActivity() {
+class CameraXActivity : AppCompatActivity() {
 
     private val REQUEST_CODE_CHOOSE_MEDIA: Int = 10000;
     private lateinit var cameraXFragment: CameraXFragment
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_camera_x)
 
-        //todo 这里要能定制各种相机的参数
+        //todo 这里要能定制各种相机的参数 ！！
         cameraXFragment = CameraXFragment.newInstance("", "")
 
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragment_container, cameraXFragment).commitAllowingStateLoss()
 
+        //去浏览媒体资源
         photo_view_btn.setOnClickListener {
-
-            Matisse.from(this@MainActivity)
+            //用的是知乎的库。自己写？NO TIME ！
+            Matisse.from(this@CameraXActivity)
                 .choose(MimeType.ofAll())
                 .countable(true)
                 .maxSelectable(9)
@@ -56,62 +59,61 @@ class MainActivity : AppCompatActivity() {
                 .forResult(REQUEST_CODE_CHOOSE_MEDIA)
         }
 
-
-        capture_btn.setCaptureLisenter(object : CaptureListener {
-            override fun takePictures() {
-                cameraXFragment.takePhoto()
-            }
-
-            override fun recordShort(time: Long) {
-                TODO("Not yet implemented")
-            }
-
-            override fun recordStart() {
-                cameraXFragment.takeVideo()
-            }
-
-            override fun recordEnd(time: Long) {
-                cameraXFragment.stopTakeVideo()
-            }
-
-            override fun recordZoom(zoom: Float) {
-
-            }
-
-            override fun recordError() {
-
-            }
-        })
-
-
-//        //去拍照
-//        capture_btn.setOnClickListener {
-//            cameraXFragment.takePhoto()
-//        }
-
-
         //切换摄像头
         switch_btn.setOnClickListener {
             if (cameraXFragment.canSwitchCamera())
                 cameraXFragment.switchCamera()
         }
 
-        /**
-         * 拍照成功，拍视频成功的监听
-         */
+        //拍照，拍视频的各种状态处理
+        capture_btn.setCaptureLisenter(object : CaptureListener {
+            override fun takePictures() {
+                cameraXFragment.takePhoto()
+            }
+
+            //录制视频时间太短
+            override fun recordShort(time: Long) {
+                Log.e("Video","Too short $time")
+            }
+
+            //开始录制视频
+            override fun recordStart() {
+                cameraXFragment.takeVideo()
+            }
+
+            //录制视频结束
+            override fun recordEnd(time: Long) {
+                cameraXFragment.stopTakeVideo()
+            }
+
+            //长按拍视频的时候拉焦距缩放
+            override fun recordZoom(zoom: Float) {
+                val a=zoom
+            }
+
+            //录制视频错误（拍照也有错误，这里还是不处理了吧）
+            override fun recordError() {
+
+            }
+        })
+
+
+        //拍照成功，拍视频成功的监听
         cameraXFragment.setOperateListener(object : OperateListener {
+
             override fun onVideoRecorded(filePath: String) {
-                Log.e("CameraXFragment", filePath)
+                Log.e("CameraXFragment", "onVideoRecorded：$filePath")
             }
 
             override fun onPhotoTaken(filePath: String) {
-                Log.e("CameraXFragment", filePath)
+                Log.e("CameraXFragment","onPhotoTaken： $filePath")
                 runOnUiThread {
                     Glide.with(baseContext)
                         .load(filePath)
                         .into(photo_view_btn)
                 }
             }
+
         })
 
     }
@@ -119,6 +121,7 @@ class MainActivity : AppCompatActivity() {
 
     /**
      * 选择图片，这里
+     *
      */
     var mSelected: List<Uri>? = null
     override fun onActivityResult(
@@ -134,17 +137,16 @@ class MainActivity : AppCompatActivity() {
             Glide.with(baseContext)
                 .load(mSelected?.get(0))
                 .into(photo_view_btn); //测试一下选择图片
-
         }
+
     }
 
 
-    // 向下按钮被触发后，通过本地广播传递给fragment，然后在其中处理拍照动作
     /** When key down event is triggered, relay it via local broadcast so fragments can handle it */
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         return when (keyCode) {
             KeyEvent.KEYCODE_VOLUME_DOWN -> {
-                val intent = Intent(KEY_EVENT_ACTION).apply { putExtra(KEY_EVENT_EXTRA, keyCode) }
+                val intent = Intent(KEY_CAMERA_EVENT_ACTION).apply { putExtra(KEY_CAMERA_EVENT_EXTRA, keyCode) }
                 LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
                 true
             }

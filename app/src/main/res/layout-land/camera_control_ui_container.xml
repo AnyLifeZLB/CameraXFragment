@@ -37,7 +37,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         android:contentDescription="@string/gallery_button_alt" />
 
-    <com.zenglb.cameraxfragment.captureView.CaptureButton
+    <com.zenglb.cameraxfragment.main.CaptureButton
         android:id="@id/capture_btn"
         android:layout_width="@dimen/round_button_large"
         android:layout_height="@dimen/round_button_large"
