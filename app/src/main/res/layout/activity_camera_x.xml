@@ -29,7 +29,6 @@
             android:layout_height="25dp"
             android:layout_marginLeft="15dp"
             android:background="@drawable/ic_switch"
-            android:contentDescription="@string/switch_camera_button_alt"
             android:scaleType="fitCenter"
             app:layout_constraintLeft_toLeftOf="@+id/setting_layout" />
 
@@ -85,7 +84,6 @@
             android:layout_height="40dp"
             android:layout_marginRight="15dp"
             android:background="@drawable/ic_photo"
-            android:contentDescription="@string/gallery_button_alt"
             android:scaleType="fitCenter"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintRight_toRightOf="parent"
