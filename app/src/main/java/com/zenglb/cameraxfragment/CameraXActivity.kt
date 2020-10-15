@@ -7,18 +7,18 @@ import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.KeyEvent
+import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.FileProvider
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.bumptech.glide.Glide
-import com.zenglb.cameraxfragment.listener.OperateListener
-import com.zenglb.cameraxfragment.main.CameraXFragment
-import com.zenglb.cameraxfragment.main.CaptureListener
-import com.zenglb.cameraxfragment.main.KEY_CAMERA_EVENT_ACTION
-import com.zenglb.cameraxfragment.main.KEY_CAMERA_EVENT_EXTRA
+import com.zenglb.camerax.main.*
 import com.zhihu.matisse.Matisse
 import com.zhihu.matisse.MimeType
 import com.zhihu.matisse.engine.impl.GlideEngine
 import kotlinx.android.synthetic.main.activity_camera_x.*
+import java.io.File
 
 
 /**
@@ -32,7 +32,6 @@ import kotlinx.android.synthetic.main.activity_camera_x.*
  *
  */
 class CameraXActivity : AppCompatActivity() {
-
     private val REQUEST_CODE_CHOOSE_MEDIA: Int = 10000;
     private lateinit var cameraXFragment: CameraXFragment
 
@@ -54,7 +53,7 @@ class CameraXActivity : AppCompatActivity() {
                 .countable(true)
                 .maxSelectable(9)
                 .restrictOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED)
-                .thumbnailScale(0.85f)
+                .thumbnailScale(0.45f)
                 .imageEngine(GlideEngine())
                 .forResult(REQUEST_CODE_CHOOSE_MEDIA)
         }
@@ -73,7 +72,8 @@ class CameraXActivity : AppCompatActivity() {
 
             //录制视频时间太短
             override fun recordShort(time: Long) {
-                Log.e("Video","Too short $time")
+                Log.e("Video", "Too short $time")
+                Toast.makeText(this@CameraXActivity,"时间太短，视频无效",Toast.LENGTH_SHORT).show()
             }
 
             //开始录制视频
@@ -88,7 +88,7 @@ class CameraXActivity : AppCompatActivity() {
 
             //长按拍视频的时候拉焦距缩放
             override fun recordZoom(zoom: Float) {
-                val a=zoom
+                val a = zoom
             }
 
             //录制视频错误（拍照也有错误，这里还是不处理了吧）
@@ -100,13 +100,23 @@ class CameraXActivity : AppCompatActivity() {
 
         //拍照成功，拍视频成功的监听
         cameraXFragment.setOperateListener(object : OperateListener {
-
             override fun onVideoRecorded(filePath: String) {
+                //时间太短不要回来了吧
                 Log.e("CameraXFragment", "onVideoRecorded：$filePath")
+
+                val photoURI: Uri = FileProvider.getUriForFile(
+                    baseContext,
+                    baseContext.getApplicationContext().getPackageName().toString() + ".provider",
+                    File(filePath)
+                )
+                intent = Intent(this@CameraXActivity, VideoPlayerActivity::class.java)
+                intent.putExtra("mMP4Path", photoURI.toString())
+
+                startActivity(intent)
             }
 
             override fun onPhotoTaken(filePath: String) {
-                Log.e("CameraXFragment","onPhotoTaken： $filePath")
+                Log.e("CameraXFragment", "onPhotoTaken： $filePath")
                 runOnUiThread {
                     Glide.with(baseContext)
                         .load(filePath)
@@ -146,7 +156,12 @@ class CameraXActivity : AppCompatActivity() {
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         return when (keyCode) {
             KeyEvent.KEYCODE_VOLUME_DOWN -> {
-                val intent = Intent(KEY_CAMERA_EVENT_ACTION).apply { putExtra(KEY_CAMERA_EVENT_EXTRA, keyCode) }
+                val intent = Intent(KEY_CAMERA_EVENT_ACTION).apply {
+                    putExtra(
+                        KEY_CAMERA_EVENT_EXTRA,
+                        keyCode
+                    )
+                }
                 LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
                 true
             }

@@ -1,2 +1,3 @@
+include ':camerax'
 include ':app'
 rootProject.name = "CameraXFragment"

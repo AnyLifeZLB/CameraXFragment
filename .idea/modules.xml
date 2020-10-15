@@ -4,7 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/CameraXFragment.iml" filepath="$PROJECT_DIR$/.idea/modules/CameraXFragment.iml" group="CameraXFragment" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/app.iml" group="CameraXFragment/app" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/cameraxfragment/cameraxfragment.iml" filepath="$PROJECT_DIR$/.idea/modules/app/cameraxfragment/cameraxfragment.iml" group="CameraXFragment/app/cameraxfragment" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/camerax/camerax.iml" filepath="$PROJECT_DIR$/.idea/modules/camerax/camerax.iml" group="CameraXFragment/camerax" />
     </modules>
   </component>
 </project>

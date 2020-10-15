@@ -12,14 +12,11 @@
         android:id="@+id/fragment_container"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@+id/camera_control_layout"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.0"
-        tools:layout_editor_absoluteX="176dp" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/setting_layout"
-        android:background="#77336699"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toTopOf="parent">
@@ -41,12 +38,10 @@
         android:id="@+id/camera_control_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/zhihu_preview_bottom_toolbar_apply_text_disable"
         android:paddingLeft="15dp"
         android:paddingRight="15dp"
-        android:paddingTop="7dp"
-        android:paddingBottom="7dp"
-
+        android:paddingTop="5dp"
+        android:paddingBottom="5dp"
         app:layout_constraintBottom_toBottomOf="parent">
 
         <!-- Camera control and gallery buttons -->
@@ -55,7 +50,6 @@
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:layout_marginLeft="15dp"
-            android:background="@android:color/transparent"
             android:contentDescription="@string/switch_camera_button_alt"
             android:scaleType="fitCenter"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -63,11 +57,11 @@
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/ic_switch" />
 
-        <com.zenglb.cameraxfragment.main.CaptureButton
+        <com.zenglb.camerax.main.CaptureButton
             android:id="@+id/capture_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:size="88"
+            app:size="80"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
@@ -78,7 +72,6 @@
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:layout_marginRight="15dp"
-            android:background="@drawable/ic_outer_circle"
             android:contentDescription="@string/gallery_button_alt"
             android:scaleType="fitCenter"
             app:layout_constraintBottom_toBottomOf="parent"

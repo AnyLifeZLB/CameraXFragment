@@ -13,7 +13,7 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
-            <option value="$PROJECT_DIR$/app/cameraxfragment" />
+            <option value="$PROJECT_DIR$/camerax" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />
