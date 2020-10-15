@@ -2,6 +2,7 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 apply plugin: 'kotlin-android-extensions'
+apply plugin: 'com.jfrog.bintray'  //jfrog
 
 android {
     compileSdkVersion 29
@@ -33,7 +34,11 @@ android {
 
 dependencies {
 
-    implementation project(':camerax')
+//    implementation project(':camerax')
+
+    implementation 'anylife.CameraXFragment:camerax:1.0.0'
+
+
     implementation 'androidx.constraintlayout:constraintlayout:2.0.2'
 
     implementation "com.zhihu.android:matisse:0.5.3-beta3"

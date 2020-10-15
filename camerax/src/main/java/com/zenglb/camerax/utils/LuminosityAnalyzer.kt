@@ -6,15 +6,17 @@ import java.nio.ByteBuffer
 import java.util.ArrayDeque
 
 /**
- * 图像分析，一般是不需要的
  *
  * All we need to do is override the function `analyze` with our desired operations. Here,
  * we compute the average luminosity of the image by looking at the Y plane of the YUV frame.
  */
 
-//Helper type alias used for analysis use case callbacks
 typealias LumaListener = (luma: Double) -> Unit
 
+/**
+ *
+ *
+ */
 class LuminosityAnalyzer(listener: LumaListener? = null) : ImageAnalysis.Analyzer {
     private val frameRateWindow = 8
     private val frameTimestamps = ArrayDeque<Long>(5)

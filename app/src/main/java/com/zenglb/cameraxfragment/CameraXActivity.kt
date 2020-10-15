@@ -7,7 +7,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.KeyEvent
-import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
@@ -47,15 +46,18 @@ class CameraXActivity : AppCompatActivity() {
 
         //去浏览媒体资源
         photo_view_btn.setOnClickListener {
-            //用的是知乎的库。自己写？NO TIME ！
             Matisse.from(this@CameraXActivity)
-                .choose(MimeType.ofAll())
+                .choose(MimeType.ofImage())
                 .countable(true)
                 .maxSelectable(9)
                 .restrictOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED)
                 .thumbnailScale(0.45f)
                 .imageEngine(GlideEngine())
                 .forResult(REQUEST_CODE_CHOOSE_MEDIA)
+        }
+
+        close_btn.setOnClickListener {
+            this@CameraXActivity.finish()
         }
 
         //切换摄像头
@@ -72,7 +74,7 @@ class CameraXActivity : AppCompatActivity() {
 
             //录制视频时间太短
             override fun recordShort(time: Long) {
-                Log.e("Video", "Too short $time")
+                Log.d("Video", "Too short $time")
                 Toast.makeText(this@CameraXActivity,"时间太短，视频无效",Toast.LENGTH_SHORT).show()
             }
 
@@ -101,8 +103,7 @@ class CameraXActivity : AppCompatActivity() {
         //拍照成功，拍视频成功的监听
         cameraXFragment.setOperateListener(object : OperateListener {
             override fun onVideoRecorded(filePath: String) {
-                //时间太短不要回来了吧
-                Log.e("CameraXFragment", "onVideoRecorded：$filePath")
+                Log.d("CameraXFragment", "onVideoRecorded：$filePath")
 
                 val photoURI: Uri = FileProvider.getUriForFile(
                     baseContext,
@@ -110,16 +111,15 @@ class CameraXActivity : AppCompatActivity() {
                     File(filePath)
                 )
                 intent = Intent(this@CameraXActivity, VideoPlayerActivity::class.java)
-                intent.putExtra("mMP4Path", photoURI.toString())
-
-                startActivity(intent)
+                startActivity(intent.putExtra("mMP4Path", photoURI.toString()))
             }
 
             override fun onPhotoTaken(filePath: String) {
-                Log.e("CameraXFragment", "onPhotoTaken： $filePath")
+                Log.d("CameraXFragment", "onPhotoTaken： $filePath")
                 runOnUiThread {
                     Glide.with(baseContext)
                         .load(filePath)
+                        .circleCrop()
                         .into(photo_view_btn)
                 }
             }

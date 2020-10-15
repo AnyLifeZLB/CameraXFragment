@@ -26,7 +26,6 @@ const val ANIMATION_SLOW_MILLIS = 100L
  * Simulate a button click, including a small delay while it is being pressed to trigger the
  * appropriate animations.
  *
- * 模拟按钮点击
  */
 fun ImageButton.simulateClick(delay: Long = ANIMATION_FAST_MILLIS) {
     performClick()

@@ -11,25 +11,37 @@
     <FrameLayout
         android:id="@+id/fragment_container"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="match_parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/setting_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:padding="15dp"
         app:layout_constraintTop_toTopOf="parent">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="@dimen/rect_button_margin"
-            android:text=" 点击拍照，长按摄像 [Testing]"
-            android:textColor="@android:color/holo_red_dark"
-            android:textSize="18sp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+        <!-- switch buttons -->
+        <ImageButton
+            android:id="@+id/switch_btn"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:layout_marginLeft="15dp"
+            android:background="@drawable/ic_switch"
+            android:contentDescription="@string/switch_camera_button_alt"
+            android:scaleType="fitCenter"
+            app:layout_constraintLeft_toLeftOf="@+id/setting_layout" />
+
+        <ImageButton
+            android:id="@+id/flush_btn"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_marginLeft="33dp"
+            android:background="@drawable/ic_flash_off_24"
+            android:contentDescription="@string/switch_camera_button_alt"
+            android:scaleType="fitCenter"
+            app:layout_constraintLeft_toRightOf="@+id/switch_btn" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -39,45 +51,45 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingLeft="15dp"
-        android:paddingRight="15dp"
         android:paddingTop="5dp"
+        android:paddingRight="15dp"
         android:paddingBottom="5dp"
         app:layout_constraintBottom_toBottomOf="parent">
 
         <!-- Camera control and gallery buttons -->
         <ImageButton
-            android:id="@+id/switch_btn"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
+            android:id="@+id/close_btn"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
             android:layout_marginLeft="15dp"
+            android:background="@drawable/ic_return"
             android:contentDescription="@string/switch_camera_button_alt"
             android:scaleType="fitCenter"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/ic_switch" />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <com.zenglb.camerax.main.CaptureButton
             android:id="@+id/capture_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:size="80"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:size="80" />
 
         <ImageButton
             android:id="@+id/photo_view_btn"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:layout_marginRight="15dp"
+            android:background="@drawable/ic_photo"
             android:contentDescription="@string/gallery_button_alt"
             android:scaleType="fitCenter"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/ic_photo" />
+            app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

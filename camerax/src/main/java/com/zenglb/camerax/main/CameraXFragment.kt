@@ -445,7 +445,7 @@ class CameraXFragment : Fragment() {
                         //我就没有看见 output.savedUri 有过正常的数据
                         val savedUri = output.savedUri ?: Uri.fromFile(photoFile)
                         operateListener.onPhotoTaken(savedUri.path.toString())
-                        flushMedia(output.savedUri)
+                        flushMedia(savedUri)
                     }
                 })
         }

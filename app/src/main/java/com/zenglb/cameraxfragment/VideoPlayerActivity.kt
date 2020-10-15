@@ -32,7 +32,7 @@ class VideoPlayerActivity : AppCompatActivity() {
             //这里循环播放好一点
             video_view.start()
         }
-
+        mMediaController?.show(3000)
         mMediaController?.show()
     }
 }
