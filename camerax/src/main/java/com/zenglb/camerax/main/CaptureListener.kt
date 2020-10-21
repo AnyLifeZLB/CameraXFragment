@@ -7,9 +7,7 @@ package com.zenglb.camerax.main
  */
 public interface CaptureListener {
 
-    public fun takePictures()
-
-    fun recordShort(time: Long)
+    fun takePictures()
 
     fun recordStart()
 
@@ -17,5 +15,5 @@ public interface CaptureListener {
 
     fun recordZoom(zoom: Float)
 
-    fun recordError()
+    fun recordError(message:String)
 }

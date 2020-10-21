@@ -63,11 +63,11 @@ private const val ARG_PARAM2 = "param2"
 class CameraXFragment : Fragment() {
 
     //这些参数初始化和接口初始化后面再写吧
-    fun setOperateListener(listener: OperateListener) {
-        this.operateListener = listener
+    fun setCaptureResultListener(listener: CaptureResultListener) {
+        this.captureResultListener = listener
     }
 
-    private lateinit var operateListener: OperateListener
+    private lateinit var captureResultListener: CaptureResultListener
 
     // TODO: Rename and change types of parameters
     private var param1: String? = null
@@ -227,7 +227,7 @@ class CameraXFragment : Fragment() {
         preview = Preview.Builder()
             // 我们要去宽高比，但是没有分辨率
             .setTargetAspectRatio(screenAspectRatio)
-            //设置初始的旋转
+            // 设置初始的旋转
             .setTargetRotation(rotation)
             .build()
 
@@ -285,12 +285,17 @@ class CameraXFragment : Fragment() {
     /**
      * 停止录像
      *
+     * 录制的视频的时间
      */
-    public fun stopTakeVideo() {
+    public fun stopTakeVideo(time: Long) {
+        //这里是不是会自动的unbind VideoCapture
         videoCapture?.stopRecording()
     }
 
 
+    /**
+     *
+     */
     private fun bindCameraUseCase(captureMode: Int) {
 
         // 再次重新绑定前应该先解绑
@@ -302,6 +307,7 @@ class CameraXFragment : Fragment() {
                 0 -> camera = cameraProvider?.bindToLifecycle(
                     this, cameraSelector, preview, imageCapture
                 )
+
                 1 -> camera = cameraProvider?.bindToLifecycle(
                     this, cameraSelector, preview, videoCapture
                 )
@@ -357,7 +363,7 @@ class CameraXFragment : Fragment() {
                         bindCameraUseCase(0)
                     })
 
-                    operateListener.onVideoRecorded(outputFileResults.savedUri?.path.toString())
+                    captureResultListener.onVideoRecorded(outputFileResults.savedUri?.path.toString())
                 }
 
                 override fun onError(error: Int, message: String, cause: Throwable?) {
@@ -444,7 +450,7 @@ class CameraXFragment : Fragment() {
                     override fun onImageSaved(output: ImageCapture.OutputFileResults) {
                         //我就没有看见 output.savedUri 有过正常的数据
                         val savedUri = output.savedUri ?: Uri.fromFile(photoFile)
-                        operateListener.onPhotoTaken(savedUri.path.toString())
+                        captureResultListener.onPhotoTaken(savedUri.path.toString())
                         flushMedia(savedUri)
                     }
                 })
@@ -502,7 +508,14 @@ class CameraXFragment : Fragment() {
             // Request camera-related permissions
             requestPermissions(REQUIRED_PERMISSIONS, PERMISSIONS_REQUEST_CODE)
         } else {
+
+            // 等待所有的View 都能正确的显示出
+            cameraPreview.post {
+                // Keep track of the display in which this view is attached
+                displayId = cameraPreview.display.displayId
+                // Set up the camera and its use cases
             setUpCamera()
+            }
         }
     }
 
@@ -534,6 +547,9 @@ class CameraXFragment : Fragment() {
         // Unregister the broadcast receivers and listeners
         broadcastManager.unregisterReceiver(volumeDownReceiver)
         displayManager.unregisterDisplayListener(displayListener)
+
+
+
     }
 
 

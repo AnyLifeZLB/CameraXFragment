@@ -1,6 +1,6 @@
 package com.zenglb.cameraxfragment.listener;
 
-import com.zenglb.camerax.main.OperateListener
+import com.zenglb.camerax.main.CaptureResultListener
 
 
 /**
@@ -9,7 +9,7 @@ import com.zenglb.camerax.main.OperateListener
 public interface CameraFragmentApi {
 
     fun takePhotoOrCaptureVideo(
-        listener: OperateListener,
+        listener: CaptureResultListener,
         directoryPath: String,
         fileName: String
     );
@@ -26,6 +26,6 @@ public interface CameraFragmentApi {
 
 //    fun setControlsListener(CameraFragmentControlsListener cameraFragmentControlsListener);
 
-    fun setResultListener(fragmentListener: OperateListener);
+    fun setResultListener(fragmentListener: CaptureResultListener);
 
 }

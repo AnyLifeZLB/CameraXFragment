@@ -2,5 +2,6 @@
 <resources>
     <declare-styleable name="CaptureButton">
         <attr name="size" format="integer" />
+        <attr name="maxDuration" format="integer" />
     </declare-styleable>
 </resources>

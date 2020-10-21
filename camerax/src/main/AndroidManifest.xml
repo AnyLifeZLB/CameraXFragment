@@ -10,8 +10,6 @@
 
     <application>
 
-        <activity android:name=".EmptyActivity"/>
-
 
     </application>
 
