@@ -2,9 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/CameraXFragment.iml" filepath="$PROJECT_DIR$/.idea/modules/CameraXFragment.iml" group="CameraXFragment" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/app.iml" group="CameraXFragment/app" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/camerax/camerax.iml" filepath="$PROJECT_DIR$/.idea/modules/camerax/camerax.iml" group="CameraXFragment/camerax" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/CameraXFragment.iml" filepath="$PROJECT_DIR$/.idea/modules/CameraXFragment.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/CameraXFragment.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/CameraXFragment.app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/camerax/CameraXFragment.camerax.iml" filepath="$PROJECT_DIR$/.idea/modules/camerax/CameraXFragment.camerax.iml" />
     </modules>
   </component>
 </project>

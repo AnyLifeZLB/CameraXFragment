@@ -36,6 +36,7 @@ import com.zenglb.camerax.R
 import com.zenglb.camerax.utils.ANIMATION_FAST_MILLIS
 import com.zenglb.camerax.utils.ANIMATION_SLOW_MILLIS
 import java.io.File
+import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ExecutorService
@@ -48,14 +49,14 @@ const val KEY_CAMERA_EVENT_ACTION = "key_camera_event_action"
 const val KEY_CAMERA_EVENT_EXTRA = "key_camera_event_extra"
 
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
+private const val CACHE_MEDIA_DIR = "cache_media_dir"
 private const val ARG_PARAM2 = "param2"
 
 
 /**
  * 拍照 摄像封装
  *
- * 1.AAR 要混淆
+ * 1.AAR 要混淆。
  * 2.切换拍照，摄像 会黑屏
  * 3.
  *
@@ -70,13 +71,13 @@ class CameraXFragment : Fragment() {
     private lateinit var captureResultListener: CaptureResultListener
 
     // TODO: Rename and change types of parameters
-    private var param1: String? = null
+    private var cacheMediaDir: String? = null
     private var param2: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
+            cacheMediaDir = it.getString(CACHE_MEDIA_DIR)
             param2 = it.getString(ARG_PARAM2)
         }
     }
@@ -84,8 +85,8 @@ class CameraXFragment : Fragment() {
     //CameraFragment 对应的XML布局中最外层的ConstraintLayout
     private lateinit var cameraUIContainer: FrameLayout
 
-    private lateinit var cameraPreview: PreviewView
-    private lateinit var outputDirectory: File
+    private lateinit var cameraPreview: PreviewView  //接受用于显示预览的 Surface
+    private lateinit var outputDirectory: File       //文件保存操作
     private lateinit var broadcastManager: LocalBroadcastManager
 
     private lateinit var cameraSelector: CameraSelector
@@ -98,7 +99,7 @@ class CameraXFragment : Fragment() {
     private var cameraProvider: ProcessCameraProvider? = null
 
     private var imageCapture: ImageCapture? = null //拍照
-    private var videoCapture: VideoCapture? = null//录像用例
+    private var videoCapture: VideoCapture? = null //录像用例
 
     private val displayManager by lazy {
         requireContext().getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
@@ -150,6 +151,10 @@ class CameraXFragment : Fragment() {
         cameraUIContainer = view as FrameLayout
         cameraPreview = cameraUIContainer.findViewById(R.id.camera_preview)
 
+
+        requireContext()
+
+
         // 初始化我们的后台执行器 Initialize our background executor
         cameraExecutor = Executors.newSingleThreadExecutor()  //可能需要更多的处理
 
@@ -165,15 +170,16 @@ class CameraXFragment : Fragment() {
         displayManager.registerDisplayListener(displayListener, null)
 
         // 确定图片保存的目录
-        outputDirectory = getOutputDirectory(requireContext())
+//        outputDirectory = getOutputDirectory(requireContext())
 
-        // 等待所有的View 都能正确的显示出
-        cameraPreview.post {
-            // Keep track of the display in which this view is attached
-            displayId = cameraPreview.display.displayId
-            // Set up the camera and its use cases
-//            setUpCamera()
-        }
+//        // 等待所有的View 都能正确的显示出
+//        cameraPreview.post {
+//            // Keep track of the display in which this view is attached
+//            displayId = cameraPreview.display.displayId
+//            // Set up the camera and its use cases
+////            setUpCamera()
+//        }
+
     }
 
 
@@ -247,6 +253,10 @@ class CameraXFragment : Fragment() {
 
         videoCapture = VideoCapture.Builder()//录像用例配置
             .setTargetAspectRatio(AspectRatio.RATIO_16_9) //设置高宽比「我比较喜欢全屏」
+            //视频帧率  越高视频体积越大
+            .setVideoFrameRate(60)
+            //bit率  越大视频体积越大
+            .setBitRate(3 * 1024 * 1024)
             .setTargetRotation(rotation)//设置旋转角度
             .setAudioRecordSource(MediaRecorder.AudioSource.MIC)//设置音频源麦克风
             .build()
@@ -326,7 +336,7 @@ class CameraXFragment : Fragment() {
      * 拍摄视频移动手指控制缩放,支持中...
      *
      */
-    public fun zoomTakeVideo(){
+    public fun zoomTakeVideo() {
 //        videoCapture?
     }
 
@@ -337,7 +347,8 @@ class CameraXFragment : Fragment() {
     public fun takeVideo() {
         bindCameraUseCase(1)
 
-        val videoFile = createMediaFile(outputDirectory, FILENAME, VIDEO_EXTENSION)
+//        val videoFile = createMediaFile(outputDirectory, VIDEO_EXTENSION)
+        val videoFile=createImageFile(cacheMediaDir,VIDEO_EXTENSION)
 
         // 设置视频的元数据，这里需要后期再完善吧
         val metadata = VideoCapture.Metadata().apply {
@@ -419,12 +430,15 @@ class CameraXFragment : Fragment() {
      *
      */
     public fun takePhoto() {
+
         indicateSuccess()
 
         // Get a stable reference of the modifiable image capture use case
         imageCapture?.let { imageCapture ->
             //todo 路径和照片名字的前缀要可以定制
-            val photoFile = createMediaFile(outputDirectory, FILENAME, PHOTO_EXTENSION)
+//            val photoFile = createMediaFile(outputDirectory, FILENAME, PHOTO_EXTENSION)
+
+            val photoFile=createImageFile(cacheMediaDir,PHOTO_EXTENSION);
 
             // 设置拍照的元数据
             val metadata = ImageCapture.Metadata().apply {
@@ -471,7 +485,6 @@ class CameraXFragment : Fragment() {
     }
 
 
-
     /**
      * 是否有两个摄像头可以用来切换
      *
@@ -514,7 +527,7 @@ class CameraXFragment : Fragment() {
                 // Keep track of the display in which this view is attached
                 displayId = cameraPreview.display.displayId
                 // Set up the camera and its use cases
-            setUpCamera()
+                setUpCamera()
             }
         }
     }
@@ -549,7 +562,6 @@ class CameraXFragment : Fragment() {
         displayManager.unregisterDisplayListener(displayListener)
 
 
-
     }
 
 
@@ -564,12 +576,13 @@ class CameraXFragment : Fragment() {
 
     companion object {
         private const val TAG = "CameraXFragment"
-        private const val FILENAME = "yyyyMMdd-HH:mm:ss"
         private const val PHOTO_EXTENSION = ".jpg"
         private const val VIDEO_EXTENSION = ".mp4"
         private const val PERMISSIONS_REQUEST_CODE = 10
         private const val RATIO_4_3_VALUE = 4.0 / 3.0
         private const val RATIO_16_9_VALUE = 16.0 / 9.0
+
+
 
         private val REQUIRED_PERMISSIONS = arrayOf(
             Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE,
@@ -590,33 +603,63 @@ class CameraXFragment : Fragment() {
                     .format(System.currentTimeMillis()) + extension
             )
 
+//        /**
+//         * 要支持定制目录？
+//         */
+//        @Deprecated
+//        fun getOutputDirectory(context: Context): File {
+//            return Environment.getExternalStorageDirectory().path.let {
+//                File(it, "hehe/haha").apply { mkdirs() }
+//            }
+//        }
+
+
         /**
-         * 要支持定制目录？
+         * 产生的素材都将统一放在Lebang 文件下，后续需要清楚才好管理
+         *
+         * @return
+         * @throws IOException
          */
-        fun getOutputDirectory(context: Context): File {
+        @Throws(IOException::class)
+        private fun createImageFile(baseFolder: String?, format: String): File {
+            val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
+//            val cacheImagesDir = Environment.getExternalStorageDirectory().toString() + "/lebang/images/"
 
-            val mediaDir = Environment.getExternalStorageDirectory().path.let {
-                File(it, "AppName/medias").apply { mkdirs() }
-            }
+            //产生的素材都将统一放在Lebang 文件下，后续才好管理
+            createDirs(baseFolder)
+            //名字后缀严禁修改,
 
-            return mediaDir
+            return File(baseFolder + timeStamp + format)
         }
 
+        /**
+         * 创建图片目录
+         *
+         * @param dirPath
+         * @return
+         */
+        private fun createDirs(dirPath: String?): Boolean {
+            //判断为空的目录的情况用默认目录。。。。
+            val file = File(dirPath)
+            return if (!file.exists() || !file.isDirectory) {
+                file.mkdirs()
+            } else true
+        }
 
         /**
          * Use this factory method to create a new instance of
          * this fragment using the provided parameters.
          *
-         * @param param1 Parameter 1.
+         * @param cacheMediaDir Parameter 1.
          * @param param2 Parameter 2.
          * @return A new instance of fragment CameraXFragment.
          */
         // TODO: Rename and change types and number of parameters
         @JvmStatic
-        fun newInstance(param1: String, param2: String) =
+        fun newInstance(cacheMediaDir: String, param2: String) =
             CameraXFragment().apply {
                 arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
+                    putString(CACHE_MEDIA_DIR, cacheMediaDir)
                     putString(ARG_PARAM2, param2)
                 }
             }

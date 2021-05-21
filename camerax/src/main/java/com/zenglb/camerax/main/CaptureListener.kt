@@ -5,7 +5,7 @@ package com.zenglb.camerax.main
  * author hbzhou
  * date 2019/12/13 11:13
  */
-public interface CaptureListener {
+interface CaptureListener {
 
     fun takePictures()
 

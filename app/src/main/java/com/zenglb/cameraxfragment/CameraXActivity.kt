@@ -4,8 +4,11 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import android.util.Log
 import android.view.KeyEvent
+import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
@@ -25,27 +28,36 @@ import java.io.File
  * 1.CameraX Extensions 是可选插件，您可以在支持的设备上添加效果。这些效果包括人像、HDR、夜间模式和美颜
  * 2.图片分析：无缝访问缓冲区以便在算法中使用，例如传入 MLKit
  * 3.切换为录制视频模式的时候还会闪屏黑屏
+ * 4.第一个版本先不录制视频了
  *
  *
  */
 class CameraXActivity : AppCompatActivity() {
     private lateinit var cameraXFragment: CameraXFragment
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_camera_x)
 
-        //todo 这里要能定制各种相机的参数，待完善
-        cameraXFragment = CameraXFragment.newInstance("", "")
+        //todo 这里要能定制各种相机的参数，待完善，Builder 啦
+        val cacheImagesDir = Environment.getExternalStorageDirectory().toString() + "/cameraX/images/"
+
+        cameraXFragment = CameraXFragment.newInstance(cacheImagesDir, "hi")
 
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragment_container, cameraXFragment).commit()
 
 
+        capture_btn.setOnClickListener {
+
+        }
+
         //拍照，拍视频的UI 操作的各种状态处理
         capture_btn.setCaptureListener(object : CaptureListener {
             override fun takePictures() {
                 cameraXFragment.takePhoto()
+                Toast.makeText(this@CameraXActivity,"Add value:is${MyApplication.getStr()}",Toast.LENGTH_LONG).show()
             }
 
             //开始录制视频
@@ -67,6 +79,7 @@ class CameraXActivity : AppCompatActivity() {
             override fun recordError(message:String) {
 
             }
+
         })
 
 
@@ -118,16 +131,12 @@ class CameraXActivity : AppCompatActivity() {
         close_btn.setOnClickListener {
             this@CameraXActivity.finish()
         }
-
-
     }
 
 
 
-
-
     /**
-     * 音量减按钮触发拍照
+     * 音量减按钮触发拍照，如果需要复制这份代码就可以
      *
      * When key down event is triggered,
      * relay it via local broadcast so fragments can handle it

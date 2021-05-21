@@ -1,9 +1,12 @@
 <component name="libraryTable">
   <library name="Gradle: androidx.test:rules:1.3.0@aar">
     <CLASSES>
-      <root url="file://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/8b30c75c327ab9a11f9238f06bc86ac0/rules-1.3.0/AndroidManifest.xml" />
-      <root url="jar://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/8b30c75c327ab9a11f9238f06bc86ac0/rules-1.3.0/jars/classes.jar!/" />
       <root url="file://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/8b30c75c327ab9a11f9238f06bc86ac0/rules-1.3.0/res" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/2e62c34b36d41bdb7d0628fddbc67aee/rules-1.3.0/res" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/d08610ea4d81779348cd6206037f8740/rules-1.3.0/res" />
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/5eb334e774c38bbeba77c9966bb4d3e1/rules-1.3.0/jars/classes.jar!/" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/5eb334e774c38bbeba77c9966bb4d3e1/rules-1.3.0/AndroidManifest.xml" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/5eb334e774c38bbeba77c9966bb4d3e1/rules-1.3.0/res" />
     </CLASSES>
     <JAVADOC>
       <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/androidx.test/rules/1.3.0/75cf6187e2e8068b1824f86a8bba061dd6bc81c5/rules-1.3.0-javadoc.jar!/" />

@@ -2,7 +2,7 @@
 buildscript {
     // Top-level variables used for versioning
     ext.java_version = JavaVersion.VERSION_1_8
-    ext.kotlin_version = '1.4.10'
+    ext.kotlin_version = '1.4.20'
 
     repositories {
         google()
@@ -10,9 +10,9 @@ buildscript {
     }
 
     dependencies {
-        classpath "com.android.tools.build:gradle:4.0.2"
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'com.android.tools.build:gradle:4.1.3'
 
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "org.jetbrains.kotlin:kotlin-android-extensions:$kotlin_version"
 
         // for jcenter
@@ -27,21 +27,14 @@ buildscript {
 allprojects {
     repositories {
         mavenLocal()
+
         google()
         jcenter()
 
-        maven { url "https://jitpack.io" }
-
         maven {
-            name "aliyunmaven"
-            url "http://maven.aliyun.com/nexus/content/groups/public/"
+            url  "https://dl.bintray.com/anylifezlb/CameraXFragment" //拍照录制视频
         }
 
-        maven { url 'http://developer.huawei.com/repo/'}
-
-        maven {
-            url 'https://dl.bintray.com/zouyuhan/maven'
-        }
     }
 }
 
