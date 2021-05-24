@@ -86,7 +86,6 @@ class CameraXFragment : Fragment() {
     private lateinit var cameraUIContainer: FrameLayout
 
     private lateinit var cameraPreview: PreviewView  //接受用于显示预览的 Surface
-    private lateinit var outputDirectory: File       //文件保存操作
     private lateinit var broadcastManager: LocalBroadcastManager
 
     private lateinit var cameraSelector: CameraSelector
@@ -151,9 +150,7 @@ class CameraXFragment : Fragment() {
         cameraUIContainer = view as FrameLayout
         cameraPreview = cameraUIContainer.findViewById(R.id.camera_preview)
 
-
         requireContext()
-
 
         // 初始化我们的后台执行器 Initialize our background executor
         cameraExecutor = Executors.newSingleThreadExecutor()  //可能需要更多的处理
@@ -169,8 +166,6 @@ class CameraXFragment : Fragment() {
         // Every time the orientation of device changes, update rotation for use cases
         displayManager.registerDisplayListener(displayListener, null)
 
-        // 确定图片保存的目录
-//        outputDirectory = getOutputDirectory(requireContext())
 
 //        // 等待所有的View 都能正确的显示出
 //        cameraPreview.post {
@@ -583,7 +578,6 @@ class CameraXFragment : Fragment() {
         private const val RATIO_16_9_VALUE = 16.0 / 9.0
 
 
-
         private val REQUIRED_PERMISSIONS = arrayOf(
             Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.RECORD_AUDIO
@@ -594,41 +588,18 @@ class CameraXFragment : Fragment() {
             checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
         }
 
-
-        /** Helper function used to create a timestamped file */
-        private fun createMediaFile(baseFolder: File, format: String, extension: String) =
-
-            File(
-                baseFolder, SimpleDateFormat(format, Locale.CHINA)
-                    .format(System.currentTimeMillis()) + extension
-            )
-
-//        /**
-//         * 要支持定制目录？
-//         */
-//        @Deprecated
-//        fun getOutputDirectory(context: Context): File {
-//            return Environment.getExternalStorageDirectory().path.let {
-//                File(it, "hehe/haha").apply { mkdirs() }
-//            }
-//        }
-
-
         /**
          * 产生的素材都将统一放在Lebang 文件下，后续需要清楚才好管理
          *
          * @return
          * @throws IOException
          */
-        @Throws(IOException::class)
         private fun createImageFile(baseFolder: String?, format: String): File {
             val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
 //            val cacheImagesDir = Environment.getExternalStorageDirectory().toString() + "/lebang/images/"
-
             //产生的素材都将统一放在Lebang 文件下，后续才好管理
             createDirs(baseFolder)
             //名字后缀严禁修改,
-
             return File(baseFolder + timeStamp + format)
         }
 
