@@ -7,9 +7,9 @@ import android.os.Bundle
 import android.os.Environment
 import android.util.Log
 import android.view.KeyEvent
-import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.camera.core.ImageCapture.FLASH_MODE_OFF
 import androidx.core.content.FileProvider
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.bumptech.glide.Glide
@@ -24,7 +24,6 @@ import java.io.File
 /**
  * 演示如何使用CameraX Fragment
  *
- *
  * 1.CameraX Extensions 是可选插件，您可以在支持的设备上添加效果。这些效果包括人像、HDR、夜间模式和美颜
  * 2.图片分析：无缝访问缓冲区以便在算法中使用，例如传入 MLKit
  * 3.切换为录制视频模式的时候还会闪屏黑屏
@@ -33,31 +32,33 @@ import java.io.File
  *
  */
 class CameraXActivity : AppCompatActivity() {
+    private val cacheMediasDir = Environment.getExternalStorageDirectory().toString() + "/cameraX/images/"
     private lateinit var cameraXFragment: CameraXFragment
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_camera_x)
 
-        //todo 这里要能定制各种相机的参数，待完善，Builder 啦
-        val cacheImagesDir = Environment.getExternalStorageDirectory().toString() + "/cameraX/images/"
+        val cameraConfig=CameraConfig.Builder()
+            .flashMode(FLASH_MODE_OFF)
+            .cacheMediasDir(cacheMediasDir)
+            .build()
 
-        cameraXFragment = CameraXFragment.newInstance(cacheImagesDir, "hi")
+        cameraXFragment = CameraXFragment.newInstance(cameraConfig)
 
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragment_container, cameraXFragment).commit()
 
 
-        capture_btn.setOnClickListener {
-
-        }
-
         //拍照，拍视频的UI 操作的各种状态处理
         capture_btn.setCaptureListener(object : CaptureListener {
             override fun takePictures() {
                 cameraXFragment.takePhoto()
-                Toast.makeText(this@CameraXActivity,"Add value:is${MyApplication.getStr()}",Toast.LENGTH_LONG).show()
+                Toast.makeText(
+                    this@CameraXActivity,
+                    "Add value:is${MyApplication.getStr()}",
+                    Toast.LENGTH_LONG
+                ).show()
             }
 
             //开始录制视频
@@ -76,7 +77,7 @@ class CameraXActivity : AppCompatActivity() {
             }
 
             //录制视频错误（拍照也有错误，这里还是不处理了吧）
-            override fun recordError(message:String) {
+            override fun recordError(message: String) {
 
             }
 
@@ -132,7 +133,6 @@ class CameraXActivity : AppCompatActivity() {
             this@CameraXActivity.finish()
         }
     }
-
 
 
     /**

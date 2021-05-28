@@ -52,25 +52,25 @@ dependencies {
 
     // CameraX core library
     def camera_version = '1.0.0-beta11'
-    implementation "androidx.camera:camera-core:$camera_version"
+    api "androidx.camera:camera-core:$camera_version"
 
     // CameraX Camera2 extensions
-    implementation "androidx.camera:camera-camera2:$camera_version"
+    api "androidx.camera:camera-camera2:$camera_version"
 
     // CameraX Lifecycle library
-    implementation "androidx.camera:camera-lifecycle:$camera_version"
+    api "androidx.camera:camera-lifecycle:$camera_version"
 
     // CameraX View class
-    implementation 'androidx.camera:camera-view:1.0.0-alpha18'
+    api 'androidx.camera:camera-view:1.0.0-alpha18'
 
     // CameraX Extensions library
-    implementation "androidx.camera:camera-extensions:1.0.0-alpha18"
+    api "androidx.camera:camera-extensions:1.0.0-alpha18"
 
 }
 
 
 
-version = "1.0.4"  //版本号，每次提交到JCenter都要修改
+version = "1.0.5"  //版本号，每次提交到JCenter都要修改
 def siteUrl = "https://github.com/AnyLifeZLB/CameraXFragment"        // project homepage
 def gitUrl  = "https://github.com/AnyLifeZLB/CameraXFragment.git"    // project git
 group = "anylife.CameraXFragment"
