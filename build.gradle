@@ -2,7 +2,7 @@
 buildscript {
     // Top-level variables used for versioning
     ext.java_version = JavaVersion.VERSION_1_8
-    ext.kotlin_version = '1.5.0'
+    ext.kotlin_version = '1.5.10'
 
     repositories {
         google()
@@ -14,12 +14,6 @@ buildscript {
 
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "org.jetbrains.kotlin:kotlin-android-extensions:$kotlin_version"
-
-        // for jcenter
-        // version: https://bintray.com/jfrog/jfrog-jars/gradle-bintray-plugin
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
-        // version: https://bintray.com/dcendents/gradle-plugins/com.github.dcendents%3Aandroid-maven-gradle-plugin
-        classpath 'com.github.dcendents:android-maven-gradle-plugin:2.1'
 
     }
 }

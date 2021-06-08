@@ -54,11 +54,6 @@ class CameraXActivity : AppCompatActivity() {
         capture_btn.setCaptureListener(object : CaptureListener {
             override fun takePictures() {
                 cameraXFragment.takePhoto()
-                Toast.makeText(
-                    this@CameraXActivity,
-                    "Add value:is${MyApplication.getStr()}",
-                    Toast.LENGTH_LONG
-                ).show()
             }
 
             //开始录制视频
