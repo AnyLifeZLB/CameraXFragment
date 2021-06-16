@@ -6,6 +6,7 @@ buildscript {
 
     repositories {
         google()
+        mavenCentral()
         jcenter()
     }
 
@@ -20,15 +21,9 @@ buildscript {
 
 allprojects {
     repositories {
-        mavenLocal()
-
         google()
+        mavenCentral()
         jcenter()
-
-        maven {
-            url  "https://dl.bintray.com/anylifezlb/CameraXFragment" //拍照录制视频
-        }
-
     }
 }
 

@@ -17,10 +17,6 @@ import android.view.View;
 import com.zenglb.camerax.R;
 
 
-/**
- * author hbzhou
- * date 2019/12/13 10:49
- */
 public class CaptureButton extends View {
     // 选择拍照 拍视频 或者都有
     public static final int BUTTON_STATE_ONLY_CAPTURE = 0x101;      //只能拍照
@@ -28,7 +24,7 @@ public class CaptureButton extends View {
     public static final int BUTTON_STATE_BOTH = 0x103;
 
     private int state;                  //当前按钮状态
-    private int button_state = 240;       //默认的大小不可用 ？？？
+    private int button_state = 240;       //默认的大小不可用
 
     public static final int STATE_IDLE = 0x001;        //空闲状态
     public static final int STATE_PRESS = 0x002;       //按下状态

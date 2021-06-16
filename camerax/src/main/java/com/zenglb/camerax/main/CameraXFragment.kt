@@ -33,6 +33,7 @@ import androidx.core.net.toFile
 import androidx.fragment.app.Fragment
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.zenglb.camerax.R
+import com.zenglb.camerax.main.CameraConfig.Companion.MEDIA_MODE_PHOTO
 import com.zenglb.camerax.utils.ANIMATION_FAST_MILLIS
 import com.zenglb.camerax.utils.ANIMATION_SLOW_MILLIS
 import java.io.File
@@ -51,11 +52,11 @@ const val KEY_CAMERA_EVENT_EXTRA = "key_camera_event_extra"
 private const val CAMERA_CONFIG = "camera_config" //相机的配置
 
 /**
- * 拍照 摄像封装
+ * 新版本拍照拍视频方案
+ * 解决老版本拍照不清晰，闪光灯,照片删除被系统侦查和流程问题
  *
- * 1.AAR 要混淆。
- * 2.切换拍照，摄像 会黑屏
- * 3.Builder 模式封装参数
+ * 如果只是拍照就不要录音的权限了；
+ *
  *
  */
 class CameraXFragment : Fragment() {
@@ -76,8 +77,11 @@ class CameraXFragment : Fragment() {
 
         arguments?.let {
             cameraConfig = it.getParcelable(CAMERA_CONFIG)!!
+            if(cameraConfig.mediaMode!=MEDIA_MODE_PHOTO){
+                REQUIRED_PERMISSIONS=REQUIRED_PERMISSIONS.plusElement(Manifest.permission.RECORD_AUDIO)
+            }
         }
-
+        cameraConfig
     }
 
     //CameraFragment 对应的XML布局中最外层的ConstraintLayout
@@ -90,6 +94,7 @@ class CameraXFragment : Fragment() {
 
     private var displayId: Int = -1
     private var lensFacing: Int = CameraSelector.LENS_FACING_BACK
+
     private var preview: Preview? = null
     private var imageAnalyzer: ImageAnalysis? = null
     private var camera: Camera? = null
@@ -327,7 +332,7 @@ class CameraXFragment : Fragment() {
      * 拍摄视频移动手指控制缩放,支持中...
      *
      */
-    public fun zoomTakeVideo() {
+    fun zoomTakeVideo() {
 //        videoCapture?
     }
 
@@ -335,7 +340,7 @@ class CameraXFragment : Fragment() {
      * 拍摄视频，目前还没有稳定，先初步的支持吧
      *
      */
-    public fun takeVideo() {
+    fun takeVideo() {
         bindCameraUseCase(1)
         val videoFile = createMediaFile(cameraConfig.cacheMediaDir, VIDEO_EXTENSION)
 
@@ -414,13 +419,25 @@ class CameraXFragment : Fragment() {
 
 
     /**
+     * 切换闪光模式
+     *
+     */
+    fun switchFlashMode() :Int{
+        when (cameraConfig.flashMode) {
+            FLASH_MODE_OFF -> cameraConfig.flashMode=FLASH_MODE_ON
+            FLASH_MODE_ON -> cameraConfig.flashMode=FLASH_MODE_OFF
+            FLASH_MODE_AUTO -> cameraConfig.flashMode=FLASH_MODE_OFF
+        }
+        // Re-bind use cases to update selected camera
+        initCameraUseCases()
+        return cameraConfig.flashMode
+    }
+
+    /**
      * 拍照处理方法(这里只是拍照，录制视频另外有方法)
      *
      */
-    public fun takePhoto() {
-
-        indicateSuccess()
-
+    fun takePhoto() {
         // Get a stable reference of the modifiable image capture use case
         imageCapture?.let { imageCapture ->
 
@@ -435,25 +452,29 @@ class CameraXFragment : Fragment() {
 
             // Create output options object which contains file + metadata
             // 创建输出选项，包含有图片文件和其中的元数据
-            val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile)
+            val outputOptions = OutputFileOptions.Builder(photoFile)
                 .setMetadata(metadata)
                 .build()
 
             // 设置拍照监听回调，当拍照动作被触发的时候
             // Setup image capture listener which is triggered after photo has been taken
             imageCapture.takePicture(
-                outputOptions, cameraExecutor, object : ImageCapture.OnImageSavedCallback {
+                outputOptions, cameraExecutor, object : OnImageSavedCallback {
                     override fun onError(exc: ImageCaptureException) {
                         Log.e(TAG, "Photo capture failed: ${exc.message}", exc)
                     }
 
-                    override fun onImageSaved(output: ImageCapture.OutputFileResults) {
+                    override fun onImageSaved(output: OutputFileResults) {
+                        indicateSuccess()  //移动到这里吧
+
                         //我就没有看见 output.savedUri 有过正常的数据
                         val savedUri = output.savedUri ?: Uri.fromFile(photoFile)
                         captureResultListener.onPhotoTaken(savedUri.path.toString())
                         flushMedia(savedUri)
+
                     }
                 })
+
         }
     }
 
@@ -479,7 +500,7 @@ class CameraXFragment : Fragment() {
      * 是否有两个摄像头可以用来切换
      *
      */
-    public fun canSwitchCamera(): Boolean {
+    fun canSwitchCamera(): Boolean {
         return hasBackCamera() && hasFrontCamera()
     }
 
@@ -575,9 +596,9 @@ class CameraXFragment : Fragment() {
         private const val RATIO_16_9_VALUE = 16.0 / 9.0
 
 
-        private val REQUIRED_PERMISSIONS = arrayOf(
+        private var REQUIRED_PERMISSIONS = arrayOf(
             Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.RECORD_AUDIO
+            Manifest.permission.READ_EXTERNAL_STORAGE
         )
 
         /** Convenience method used to check if all permissions required by this app are granted */
@@ -619,7 +640,7 @@ class CameraXFragment : Fragment() {
          * @return A new instance of fragment CameraXFragment.
          */
         @JvmStatic
-        fun newInstance( cameraConfig: CameraConfig) =
+        fun newInstance(cameraConfig: CameraConfig) =
             CameraXFragment().apply {
                 arguments = Bundle().apply {
                     putParcelable(CAMERA_CONFIG, cameraConfig)
