@@ -21,8 +21,11 @@ open class CameraConfig private constructor(val builder: Builder) : Parcelable {
         const val MEDIA_MODE_PHOTO = 1  //仅仅拍照
         const val MEDIA_MODE_VIDEO = 2  //仅仅视频
         const val MEDIA_MODE_ALL = 3    //拍照视频都可以
-        //2.
 
+        //2.闪光灯模式
+        const val FLASH_MODE_AUTO = 0
+        const val FLASH_MODE_ON = 1
+        const val FLASH_MODE_OFF = 2
     }
 
 
@@ -41,7 +44,7 @@ open class CameraConfig private constructor(val builder: Builder) : Parcelable {
 
     @Parcelize
     class Builder : Parcelable {
-        internal var flashMode: Int = ImageCapture.FLASH_MODE_OFF //Default Value
+        internal var flashMode: Int = FLASH_MODE_OFF //Default Value
         internal var cacheMediaDir: String = Environment.getExternalStorageDirectory().toString() + "/cameraX/images/"
         internal var mediaMode: Int = MEDIA_MODE_PHOTO
 

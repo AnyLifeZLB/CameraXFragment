@@ -32,21 +32,21 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-
 }
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
+
     implementation files('aars/camerax-debug.aar')
 
-//    implementation(name: 'camerax-debug', ext: 'aar')
-//    implementation project(':camerax')
+    implementation 'androidx.core:core-ktx:1.5.0'
 
-//    def camera_version = '1.1.0-alpha04' //Api 后无法引用？
+
+    def camera_version = '1.1.0-alpha04' //Api 后无法引用？
 //    implementation "androidx.camera:camera-core:1.1.0-alpha04"
-//    implementation "androidx.camera:camera-camera2:$camera_version"
+    implementation "androidx.camera:camera-camera2:$camera_version"
 //    implementation "androidx.camera:camera-lifecycle:$camera_version"
-//    implementation 'androidx.camera:camera-view:1.0.0-alpha24'
+    implementation 'androidx.camera:camera-view:1.0.0-alpha24'
 //    implementation "androidx.camera:camera-extensions:1.0.0-alpha18"
 
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
@@ -59,6 +59,8 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     kapt 'com.github.bumptech.glide:compiler:4.11.0'
+
+
 
     // Unit testing
     testImplementation 'androidx.test.ext:junit:1.1.2'

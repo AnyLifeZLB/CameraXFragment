@@ -7,10 +7,7 @@ import android.os.Bundle
 import android.os.Environment
 import android.util.Log
 import android.view.KeyEvent
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.camera.core.ImageCapture.FLASH_MODE_OFF
-
 import androidx.core.content.FileProvider
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.bumptech.glide.Glide
@@ -41,7 +38,8 @@ class CameraXActivity : AppCompatActivity() {
         setContentView(R.layout.activity_camera_x)
 
         val cameraConfig=CameraConfig.Builder()
-            .flashMode(FLASH_MODE_OFF)
+            .flashMode(CameraConfig.FLASH_MODE_OFF)
+            .mediaMode(CameraConfig.MEDIA_MODE_ALL)
             .cacheMediasDir(cacheMediasDir)
             .build()
 

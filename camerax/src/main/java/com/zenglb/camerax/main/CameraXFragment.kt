@@ -383,19 +383,20 @@ class CameraXFragment : Fragment() {
     /**
      * 让媒体资源马上可以浏览
      */
-    private fun flushMedia(savedUri: Uri?) {
+    private fun flushMedia(savedMediaUri: Uri?) {
         //刷新手机图片，App 才能预览到最新的图
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
             requireActivity().sendBroadcast(
-                Intent(android.hardware.Camera.ACTION_NEW_PICTURE, savedUri)
+                Intent(android.hardware.Camera.ACTION_NEW_PICTURE, savedMediaUri)
             )
         }
 
         val mimeType = MimeTypeMap.getSingleton()
-            .getMimeTypeFromExtension(savedUri?.toFile()?.extension)
+            .getMimeTypeFromExtension(savedMediaUri?.toFile()?.extension)
+
         MediaScannerConnection.scanFile(
             context,
-            arrayOf(savedUri?.toFile()?.absolutePath),
+            arrayOf(savedMediaUri?.toFile()?.absolutePath),
             arrayOf(mimeType)
         ) { _, uri ->
             Log.d(TAG, "Image capture scanned into media store: $uri")
@@ -468,9 +469,9 @@ class CameraXFragment : Fragment() {
                         indicateSuccess()  //移动到这里吧
 
                         //我就没有看见 output.savedUri 有过正常的数据
-                        val savedUri = output.savedUri ?: Uri.fromFile(photoFile)
-                        captureResultListener.onPhotoTaken(savedUri.path.toString())
-                        flushMedia(savedUri)
+                        val savedUriPath = output.savedUri ?: Uri.fromFile(photoFile)
+                        captureResultListener.onPhotoTaken(savedUriPath.path.toString())
+                        flushMedia(savedUriPath)
 
                     }
                 })
