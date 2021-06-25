@@ -1,13 +1,13 @@
 apply plugin: 'com.android.library'
-
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 apply plugin: 'kotlin-android-extensions'
 
 android {
-    compileSdkVersion 29
+    compileSdkVersion 30
 
     defaultConfig {
+        targetSdkVersion 28
         minSdkVersion 21
         versionCode 1
         versionName "1.0"
@@ -26,9 +26,17 @@ android {
     }
 
 
+    signingConfigs {
+        debug {
+            storeFile file('/Users/zlb/KeyStore')
+            storePassword 'Android2021'
+            keyAlias 'key_zlb'
+            keyPassword 'Android2021'
+        }
+    }
+
     buildTypes {
         release {
-            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }

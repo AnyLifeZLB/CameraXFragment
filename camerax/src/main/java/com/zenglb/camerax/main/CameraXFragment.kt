@@ -58,6 +58,7 @@ private const val CAMERA_CONFIG = "camera_config" //相机的配置
  * 如果只是拍照就不要录音的权限了；
  *
  *
+ *
  */
 class CameraXFragment : Fragment() {
 
@@ -178,6 +179,9 @@ class CameraXFragment : Fragment() {
 ////            setUpCamera()
 //        }
 
+
+        createDirs(Environment.getExternalStorageDirectory().toString() + "/cameraX/images")
+
     }
 
 
@@ -265,6 +269,7 @@ class CameraXFragment : Fragment() {
 
         // Attach the viewfinder's surface provider to preview use case
         preview?.setSurfaceProvider(cameraPreview.surfaceProvider)
+
     }
 
 
@@ -442,7 +447,7 @@ class CameraXFragment : Fragment() {
         // Get a stable reference of the modifiable image capture use case
         imageCapture?.let { imageCapture ->
 
-            val photoFile = createMediaFile(cameraConfig.cacheMediaDir, PHOTO_EXTENSION);
+            val photoFile = createMediaFile(cameraConfig.cacheMediaDir, PHOTO_EXTENSION)
 
             // 设置拍照的元数据
             val metadata = ImageCapture.Metadata().apply {
@@ -614,7 +619,7 @@ class CameraXFragment : Fragment() {
          * @throws IOException
          */
         private fun createMediaFile(baseFolder: String?, format: String): File {
-            val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
+            val timeStamp = SimpleDateFormat("yyyyMMddHHmmss").format(Date())
             createDirs(baseFolder)
             return File(baseFolder + timeStamp + format)
         }
@@ -630,7 +635,8 @@ class CameraXFragment : Fragment() {
             val file = File(dirPath)
             return if (!file.exists() || !file.isDirectory) {
                 file.mkdirs()
-            } else true
+            } else
+                true
         }
 
         /**

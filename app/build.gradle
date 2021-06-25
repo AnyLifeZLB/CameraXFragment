@@ -4,11 +4,13 @@ apply plugin: 'kotlin-kapt'
 apply plugin: 'kotlin-android-extensions'
 
 android {
-    compileSdkVersion 29
+    //所以compileSdkVersion决定了编译期间能否使用新版本的API。targetSDKVersion决定了运行期间使用哪种特性。
+    compileSdkVersion 30
     defaultConfig {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         applicationId "com.zenglb.cameraxfragment"
         minSdkVersion 21
+        targetSdkVersion 28 // 先不适配存储分区了
         versionCode 1
         versionName "1.0.0"
     }
@@ -26,8 +28,24 @@ android {
         experimental = true
     }
 
+    signingConfigs {
+        myAppConfig {
+            storeFile file('/Users/zlb/KeyStore')
+            storePassword 'Android2021'
+            keyPassword 'Android2021'
+            keyAlias 'key_zlb'
+        }
+    }
+
     buildTypes {
+        debug {
+//            signingConfig signingConfigs.myAppConfig
+//            minifyEnabled true
+//            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+
         release {
+            signingConfig signingConfigs.myAppConfig
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
@@ -37,18 +55,12 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
 
-    implementation files('aars/camerax-debug.aar')
+    implementation project(':camerax')
+//    implementation files('aars/camerax-release.aar')
+    implementation "androidx.camera:camera-camera2:1.1.0-alpha04"
+    implementation 'androidx.camera:camera-view:1.0.0-alpha24'
 
     implementation 'androidx.core:core-ktx:1.5.0'
-
-
-    def camera_version = '1.1.0-alpha04' //Api 后无法引用？
-//    implementation "androidx.camera:camera-core:1.1.0-alpha04"
-    implementation "androidx.camera:camera-camera2:$camera_version"
-//    implementation "androidx.camera:camera-lifecycle:$camera_version"
-    implementation 'androidx.camera:camera-view:1.0.0-alpha24'
-//    implementation "androidx.camera:camera-extensions:1.0.0-alpha18"
-
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     implementation "com.zhihu.android:matisse:0.5.3-beta3"
 
@@ -59,7 +71,6 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     kapt 'com.github.bumptech.glide:compiler:4.11.0'
-
 
 
     // Unit testing

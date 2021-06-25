@@ -30,6 +30,7 @@ import java.io.File
  *
  */
 class CameraXActivity : AppCompatActivity() {
+
     private val cacheMediasDir = Environment.getExternalStorageDirectory().toString() + "/cameraX/images/"
     private lateinit var cameraXFragment: CameraXFragment
 
@@ -37,9 +38,10 @@ class CameraXActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_camera_x)
 
+        Environment.getExternalStorageState()
         val cameraConfig=CameraConfig.Builder()
             .flashMode(CameraConfig.FLASH_MODE_OFF)
-            .mediaMode(CameraConfig.MEDIA_MODE_ALL)
+            .mediaMode(CameraConfig.MEDIA_MODE_ALL) //视频拍照都可以
             .cacheMediasDir(cacheMediasDir)
             .build()
 
@@ -52,6 +54,7 @@ class CameraXActivity : AppCompatActivity() {
         //拍照，拍视频的UI 操作的各种状态处理
         capture_btn.setCaptureListener(object : CaptureListener {
             override fun takePictures() {
+                Log.e("aa","aaaa")
                 cameraXFragment.takePhoto()
             }
 
