@@ -3,6 +3,9 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 apply plugin: 'kotlin-android-extensions'
 
+apply plugin: "com.vanniktech.maven.publish"
+
+
 android {
     compileSdkVersion 30
 
@@ -44,7 +47,7 @@ android {
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
+//    implementation fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
 
     // Kotlin Lang
     implementation 'androidx.core:core-ktx:1.5.0'

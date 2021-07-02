@@ -1,8 +1,12 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     // Top-level variables used for versioning
-    ext.java_version = JavaVersion.VERSION_1_8
-    ext.kotlin_version = '1.5.10'
+
+    ext {
+        kotlin_version = "1.5.20"
+        java_version = JavaVersion.VERSION_1_8
+        dokka_version = '1.4.10.2'
+    }
 
     repositories {
         google()
@@ -11,11 +15,11 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:4.2.1'
-
+        classpath 'com.android.tools.build:gradle:4.2.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "org.jetbrains.kotlin:kotlin-android-extensions:$kotlin_version"
 
+        classpath 'com.vanniktech:gradle-maven-publish-plugin:0.16.0'
     }
 }
 
@@ -25,6 +29,15 @@ allprojects {
         mavenCentral()
         jcenter()
     }
+
+
+    plugins.withId("com.vanniktech.maven.publish") {
+        mavenPublish {
+            sonatypeHost = "S01"
+        }
+    }
+
+
 }
 
 task clean(type: Delete) {

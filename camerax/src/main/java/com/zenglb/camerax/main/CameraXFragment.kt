@@ -42,6 +42,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -49,16 +50,18 @@ import kotlin.math.min
 const val KEY_CAMERA_EVENT_ACTION = "key_camera_event_action"
 const val KEY_CAMERA_EVENT_EXTRA = "key_camera_event_extra"
 
-private const val CAMERA_CONFIG = "camera_config" //相机的配置
+private const val CAMERA_CONFIG = "camera_config"    //相机的配置
 
 /**
+ * 还不能支持TargetSDK 30
+ *
  * 新版本拍照拍视频方案
  * 解决老版本拍照不清晰，闪光灯,照片删除被系统侦查和流程问题
  *
  * 如果只是拍照就不要录音的权限了；
  *
- *
- *
+ * Android库发布至MavenCentral流程详解
+ * https://juejin.cn/post/6953598441817636900
  */
 class CameraXFragment : Fragment() {
 
@@ -154,6 +157,8 @@ class CameraXFragment : Fragment() {
         cameraUIContainer = view as FrameLayout
         cameraPreview = cameraUIContainer.findViewById(R.id.camera_preview)
 
+//        cameraPreview.
+
         requireContext()
 
         // 初始化我们的后台执行器 Initialize our background executor
@@ -180,7 +185,7 @@ class CameraXFragment : Fragment() {
 //        }
 
 
-        createDirs(Environment.getExternalStorageDirectory().toString() + "/cameraX/images")
+        createDir(Environment.getExternalStorageDirectory().toString() + "/cameraX/images")
 
     }
 
@@ -330,6 +335,30 @@ class CameraXFragment : Fragment() {
             Log.e(TAG, "Use case binding failed", exc)
         }
 
+    }
+
+
+    /**
+     * 准备自动对焦了
+     *
+     *
+     */
+    fun autoFocus(){
+
+        val cameraControl = camera?.cameraControl
+        val factory = SurfaceOrientedMeteringPointFactory(width, height)
+        val point = factory.createPoint(x, y)
+        val action = FocusMeteringAction.Builder(point, FocusMeteringAction.FLAG_AF)
+            .addPoint(point, FocusMeteringAction.FLAG_AE) // could have many
+            // auto calling cancelFocusAndMetering in 5 seconds
+            .setAutoCancelDuration(5, TimeUnit.SECONDS)
+            .build()
+
+        val future = cameraControl?.startFocusAndMetering(action)
+        future?.addListener( Runnable {
+            val result = future?.get()
+            // process the result
+        } , cameraExecutor)
     }
 
 
@@ -620,7 +649,7 @@ class CameraXFragment : Fragment() {
          */
         private fun createMediaFile(baseFolder: String?, format: String): File {
             val timeStamp = SimpleDateFormat("yyyyMMddHHmmss").format(Date())
-            createDirs(baseFolder)
+            createDir(baseFolder)
             return File(baseFolder + timeStamp + format)
         }
 
@@ -630,7 +659,7 @@ class CameraXFragment : Fragment() {
          * @param dirPath
          * @return
          */
-        private fun createDirs(dirPath: String?): Boolean {
+        private fun createDir(dirPath: String?): Boolean {
             //判断为空的目录的情况用默认目录。。。。
             val file = File(dirPath)
             return if (!file.exists() || !file.isDirectory) {
