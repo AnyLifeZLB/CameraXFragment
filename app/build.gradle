@@ -57,7 +57,7 @@ dependencies {
 
     implementation project(':camerax')
 
-//    implementation "io.github.anylifezlb:CameraXFragment:1.1.0"//maven central 管理
+//    implementation "io.github.anylifezlb:CameraXFragment:1.1.1"//maven central 管理
 
     implementation "androidx.camera:camera-camera2:1.1.0-alpha04"
     implementation 'androidx.camera:camera-view:1.0.0-alpha24'

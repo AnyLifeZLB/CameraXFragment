@@ -12,4 +12,5 @@ interface CaptureListener {
     fun recordZoom(zoom: Float)
 
     fun recordError(message:String)
+
 }

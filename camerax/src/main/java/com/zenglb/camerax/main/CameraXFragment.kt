@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.graphics.Point
 import android.graphics.drawable.ColorDrawable
 import android.hardware.display.DisplayManager
 import android.media.MediaRecorder
@@ -16,10 +17,8 @@ import android.net.Uri
 import android.os.*
 import android.util.DisplayMetrics
 import android.util.Log
-import android.view.KeyEvent
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.util.Size
+import android.view.*
 import android.webkit.MimeTypeMap
 import android.widget.FrameLayout
 import android.widget.Toast
@@ -31,11 +30,16 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.checkSelfPermission
 import androidx.core.net.toFile
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.LiveData
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.google.common.util.concurrent.ListenableFuture
+import com.yeyupiaoling.cameraxapp.view.CameraXPreviewViewTouchListener
+import com.yeyupiaoling.cameraxapp.view.FocusImageView
 import com.zenglb.camerax.R
 import com.zenglb.camerax.main.CameraConfig.Companion.MEDIA_MODE_PHOTO
 import com.zenglb.camerax.utils.ANIMATION_FAST_MILLIS
 import com.zenglb.camerax.utils.ANIMATION_SLOW_MILLIS
+import kotlinx.android.synthetic.main.fragment_camerax.*
 import java.io.File
 import java.io.IOException
 import java.text.SimpleDateFormat
@@ -53,7 +57,7 @@ const val KEY_CAMERA_EVENT_EXTRA = "key_camera_event_extra"
 private const val CAMERA_CONFIG = "camera_config"    //相机的配置
 
 /**
- * 还不能支持TargetSDK 30
+ *
  *
  * 新版本拍照拍视频方案
  * 解决老版本拍照不清晰，闪光灯,照片删除被系统侦查和流程问题
@@ -75,18 +79,7 @@ class CameraXFragment : Fragment() {
     //照片，视频存储的路径
     private lateinit var cameraConfig: CameraConfig
 
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        arguments?.let {
-            cameraConfig = it.getParcelable(CAMERA_CONFIG)!!
-            if(cameraConfig.mediaMode!=MEDIA_MODE_PHOTO){
-                REQUIRED_PERMISSIONS=REQUIRED_PERMISSIONS.plusElement(Manifest.permission.RECORD_AUDIO)
-            }
-        }
-        cameraConfig
-    }
+//    private var focusView: FocusImageView? = null
 
     //CameraFragment 对应的XML布局中最外层的ConstraintLayout
     private lateinit var cameraUIContainer: FrameLayout
@@ -145,6 +138,18 @@ class CameraXFragment : Fragment() {
         } ?: Unit
     }
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        arguments?.let {
+            cameraConfig = it.getParcelable(CAMERA_CONFIG)!!
+            if(cameraConfig.mediaMode!=MEDIA_MODE_PHOTO){
+                REQUIRED_PERMISSIONS=REQUIRED_PERMISSIONS.plusElement(Manifest.permission.RECORD_AUDIO)
+            }
+        }
+        cameraConfig
+    }
+
 
     /**
      * 相机相关的状态初始化
@@ -157,9 +162,7 @@ class CameraXFragment : Fragment() {
         cameraUIContainer = view as FrameLayout
         cameraPreview = cameraUIContainer.findViewById(R.id.camera_preview)
 
-//        cameraPreview.
-
-        requireContext()
+//        requireContext()
 
         // 初始化我们的后台执行器 Initialize our background executor
         cameraExecutor = Executors.newSingleThreadExecutor()  //可能需要更多的处理
@@ -175,7 +178,6 @@ class CameraXFragment : Fragment() {
         // Every time the orientation of device changes, update rotation for use cases
         displayManager.registerDisplayListener(displayListener, null)
 
-
 //        // 等待所有的View 都能正确的显示出
 //        cameraPreview.post {
 //            // Keep track of the display in which this view is attached
@@ -183,7 +185,6 @@ class CameraXFragment : Fragment() {
 //            // Set up the camera and its use cases
 ////            setUpCamera()
 //        }
-
 
         createDir(Environment.getExternalStorageDirectory().toString() + "/cameraX/images")
 
@@ -228,6 +229,8 @@ class CameraXFragment : Fragment() {
         val metrics = DisplayMetrics().also { cameraPreview.display.getRealMetrics(it) }
         val screenAspectRatio = aspectRatio(metrics.widthPixels, metrics.heightPixels)
 
+        val size=Size(metrics.widthPixels, metrics.heightPixels)
+
         val rotation = cameraPreview.display.rotation
 
         // CameraProvider
@@ -240,6 +243,8 @@ class CameraXFragment : Fragment() {
         preview = Preview.Builder()
             // 我们要去宽高比，但是没有分辨率
             .setTargetAspectRatio(screenAspectRatio)
+//            .setTargetResolution(size)
+
             // 设置初始的旋转
             .setTargetRotation(rotation)
             .build()
@@ -247,21 +252,26 @@ class CameraXFragment : Fragment() {
         // ImageCapture
         imageCapture = ImageCapture.Builder()
             .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
-            // 我们要求长宽比，但没有分辨率匹配预览配置，但让 CameraX优化为任何特定的解决方案，最适合我们的用例
-            // We request aspect ratio but no resolution to match preview config, but letting
-            // CameraX optimize for whatever specific resolution best fits our use cases
-            .setTargetAspectRatio(screenAspectRatio)
+
             //设置初始目标旋转，如果旋转改变，我们将不得不再次调用它在此用例的生命周期中
             // Set initial target rotation, we will have to call this again if rotation changes
             // during the lifecycle of this use case
             .setTargetRotation(rotation)
+
+            // 我们要求长宽比，但没有分辨率匹配预览配置，但让 CameraX优化为任何特定的解决方案，最适合我们的用例
+            // We request aspect ratio but no resolution to match preview config, but letting
+            // CameraX optimize for whatever specific resolution best fits our use cases
+            .setTargetAspectRatio(screenAspectRatio)
+
+//            .setTargetResolution(size)
+
             .setFlashMode(cameraConfig.flashMode)
             .build()
 
 
         // 视频的还不是很成熟，不一定都能用
         videoCapture = VideoCapture.Builder()//录像用例配置
-            .setTargetAspectRatio(AspectRatio.RATIO_16_9) //设置高宽比「我比较喜欢全屏」
+            .setTargetAspectRatio(screenAspectRatio) //设置高宽比「我比较喜欢全屏」
             //视频帧率  越高视频体积越大
             .setVideoFrameRate(60)
             //bit率  越大视频体积越大
@@ -270,11 +280,95 @@ class CameraXFragment : Fragment() {
             .setAudioRecordSource(MediaRecorder.AudioSource.MIC)//设置音频源麦克风
             .build()
 
+
+        val orientationEventListener = object : OrientationEventListener(this as Context) {
+            override fun onOrientationChanged(orientation : Int) {
+                // Monitors orientation values to determine the target rotation value
+                val rotation : Int = when (orientation) {
+                    in 45..134 -> Surface.ROTATION_270
+                    in 135..224 -> Surface.ROTATION_180
+                    in 225..314 -> Surface.ROTATION_90
+                    else -> Surface.ROTATION_0
+                }
+
+                imageCapture?.targetRotation = rotation
+            }
+        }
+        orientationEventListener.enable()
+
+
         bindCameraUseCase(0)
 
         // Attach the viewfinder's surface provider to preview use case
         preview?.setSurfaceProvider(cameraPreview.surfaceProvider)
 
+        initCameraListener()
+    }
+
+
+
+    // 相机点击等相关操作监听
+    private fun initCameraListener() {
+        val zoomState: LiveData<ZoomState>? = camera?.cameraInfo?.zoomState
+        val cameraXPreviewViewTouchListener = CameraXPreviewViewTouchListener(this.context)
+
+        cameraXPreviewViewTouchListener.setCustomTouchListener(object :
+            CameraXPreviewViewTouchListener.CustomTouchListener {
+            // 放大缩小操作
+            override fun zoom(delta: Float) {
+                Log.d(TAG, "缩放")
+                zoomState?.value?.let {
+                    val currentZoomRatio = it.zoomRatio
+                    camera?.cameraControl!!.setZoomRatio(currentZoomRatio * delta)
+                }
+            }
+
+            //点击操作
+            override fun click(x: Float, y: Float) {
+                Log.d(TAG, "单击")
+                val factory = camera_preview.meteringPointFactory
+                // 设置对焦位置
+                val point = factory.createPoint(x, y)
+                val action = FocusMeteringAction.Builder(point, FocusMeteringAction.FLAG_AF)
+                    // 3秒内自动调用取消对焦
+                    .setAutoCancelDuration(3, TimeUnit.SECONDS)
+                    .build()
+                // 执行对焦
+                focus_view!!.startFocus(Point(x.toInt(), y.toInt()))
+                val future: ListenableFuture<*> = camera?.cameraControl!!.startFocusAndMetering(action)
+                future.addListener({
+                    try {
+                        // 获取对焦结果
+                        val result = future.get() as FocusMeteringResult
+                        if (result.isFocusSuccessful) {
+                            focus_view!!.onFocusSuccess()
+                        } else {
+                            focus_view!!.onFocusFailed()
+                        }
+                    } catch (e: java.lang.Exception) {
+                        Log.e(TAG, e.toString())
+                    }
+                }, ContextCompat.getMainExecutor(this@CameraXFragment.context))
+            }
+
+            // 双击操作
+            override fun doubleClick(x: Float, y: Float) {
+                Log.d(TAG, "双击")
+                // 双击放大缩小
+                val currentZoomRatio = zoomState?.value!!.zoomRatio
+                if (currentZoomRatio > zoomState.value!!.minZoomRatio) {
+                    camera?.cameraControl!!.setLinearZoom(0f)
+                } else {
+                    camera?.cameraControl!!.setLinearZoom(0.5f)
+                }
+            }
+
+            override fun longPress(x: Float, y: Float) {
+                Log.d(TAG, "长按")
+            }
+        })
+        // 添加监听事件
+        camera_preview.setOnTouchListener(cameraXPreviewViewTouchListener)
     }
 
 
@@ -338,29 +432,6 @@ class CameraXFragment : Fragment() {
     }
 
 
-    /**
-     * 准备自动对焦了
-     *
-     *
-     */
-    fun autoFocus(){
-
-        val cameraControl = camera?.cameraControl
-        val factory = SurfaceOrientedMeteringPointFactory(width, height)
-        val point = factory.createPoint(x, y)
-        val action = FocusMeteringAction.Builder(point, FocusMeteringAction.FLAG_AF)
-            .addPoint(point, FocusMeteringAction.FLAG_AE) // could have many
-            // auto calling cancelFocusAndMetering in 5 seconds
-            .setAutoCancelDuration(5, TimeUnit.SECONDS)
-            .build()
-
-        val future = cameraControl?.startFocusAndMetering(action)
-        future?.addListener( Runnable {
-            val result = future?.get()
-            // process the result
-        } , cameraExecutor)
-    }
-
 
     /**
      * 拍摄视频移动手指控制缩放,支持中...
@@ -390,27 +461,34 @@ class CameraXFragment : Fragment() {
             .build()
 
         //开始录像
-        videoCapture?.startRecording(
-            outputOptions,
-            Executors.newSingleThreadExecutor(),
-            object : VideoCapture.OnVideoSavedCallback {
-                override fun onVideoSaved(outputFileResults: VideoCapture.OutputFileResults) {
-                    Log.e(TAG, "onVideoSaved: ${outputFileResults.savedUri?.path.toString()}")
-                    flushMedia(outputFileResults.savedUri)
+        if (checkSelfPermission(requireContext(), Manifest.permission.RECORD_AUDIO)
+            != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(REQUIRED_PERMISSIONS, PERMISSIONS_REQUEST_CODE)
+            return
+        }else{
+            videoCapture?.startRecording(
+                outputOptions,
+                Executors.newSingleThreadExecutor(),
+                object : VideoCapture.OnVideoSavedCallback {
+                    override fun onVideoSaved(outputFileResults: VideoCapture.OutputFileResults) {
+                        Log.e(TAG, "onVideoSaved: ${outputFileResults.savedUri?.path.toString()}")
+                        flushMedia(outputFileResults.savedUri)
 
-                    Handler(Looper.getMainLooper()).post(Runnable {
-                        bindCameraUseCase(0)
-                    })
+                        Handler(Looper.getMainLooper()).post(Runnable {
+                            bindCameraUseCase(0)
+                        })
 
-                    captureResultListener.onVideoRecorded(outputFileResults.savedUri?.path.toString())
-                }
+                        captureResultListener.onVideoRecorded(outputFileResults.savedUri?.path.toString())
+                    }
 
-                override fun onError(error: Int, message: String, cause: Throwable?) {
-                    Handler(Looper.getMainLooper()).post(Runnable {
-                        bindCameraUseCase(0)
-                    })
-                }
-            })
+                    override fun onError(error: Int, message: String, cause: Throwable?) {
+                        Handler(Looper.getMainLooper()).post(Runnable {
+                            bindCameraUseCase(0)
+                        })
+                    }
+                })
+        }
+
     }
 
 
@@ -629,7 +707,6 @@ class CameraXFragment : Fragment() {
         private const val PERMISSIONS_REQUEST_CODE = 10
         private const val RATIO_4_3_VALUE = 4.0 / 3.0
         private const val RATIO_16_9_VALUE = 16.0 / 9.0
-
 
         private var REQUIRED_PERMISSIONS = arrayOf(
             Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE,
