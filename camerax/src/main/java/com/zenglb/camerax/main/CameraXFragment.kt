@@ -281,7 +281,7 @@ class CameraXFragment : Fragment() {
             .build()
 
 
-        val orientationEventListener = object : OrientationEventListener(this as Context) {
+        val orientationEventListener = object : OrientationEventListener(this.context) {
             override fun onOrientationChanged(orientation : Int) {
                 // Monitors orientation values to determine the target rotation value
                 val rotation : Int = when (orientation) {

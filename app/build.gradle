@@ -10,7 +10,7 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         applicationId "com.zenglb.cameraxfragment"
         minSdkVersion 21
-        targetSdkVersion 28 // 先不适配存储分区了
+        targetSdkVersion 28  //先不适配存储分区了，有需要请提PR 吧
         versionCode 1
         versionName "1.0.0"
     }
