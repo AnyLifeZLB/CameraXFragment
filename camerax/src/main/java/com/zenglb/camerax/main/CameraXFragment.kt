@@ -39,6 +39,7 @@ import com.zenglb.camerax.R
 import com.zenglb.camerax.main.CameraConfig.Companion.MEDIA_MODE_PHOTO
 import com.zenglb.camerax.utils.ANIMATION_FAST_MILLIS
 import com.zenglb.camerax.utils.ANIMATION_SLOW_MILLIS
+import com.zenglb.camerax.utils.LuminosityAnalyzer
 import kotlinx.android.synthetic.main.fragment_camerax.*
 import java.io.File
 import java.io.IOException
@@ -277,7 +278,7 @@ class CameraXFragment : Fragment() {
             //bit率  越大视频体积越大
             .setBitRate(3 * 1024 * 1024)
             .setTargetRotation(rotation)//设置旋转角度
-            .setAudioRecordSource(MediaRecorder.AudioSource.MIC)//设置音频源麦克风
+//            .setAudioRecordSource(MediaRecorder.AudioSource.MIC)//设置音频源麦克风
             .build()
 
 
@@ -348,7 +349,7 @@ class CameraXFragment : Fragment() {
                     } catch (e: java.lang.Exception) {
                         Log.e(TAG, e.toString())
                     }
-                }, ContextCompat.getMainExecutor(this@CameraXFragment.context))
+                }, ContextCompat.getMainExecutor(this@CameraXFragment.requireContext()) )
             }
 
             // 双击操作
@@ -404,8 +405,11 @@ class CameraXFragment : Fragment() {
         videoCapture?.stopRecording()
     }
 
+
     /**
-     *
+     * captureMode
+     * 0：拍照
+     * 1：拍视频
      */
     private fun bindCameraUseCase(captureMode: Int) {
         // 再次重新绑定前应该先解绑
@@ -414,9 +418,32 @@ class CameraXFragment : Fragment() {
         try {
             //目前一次无法绑定拍照和摄像一起
             when (captureMode) {
-                0 -> camera = cameraProvider?.bindToLifecycle(
-                    this, cameraSelector, preview, imageCapture
-                )
+                //拍照预览的时候尝试图片分析
+
+                0 -> {
+
+                    val imageAnalyzer = ImageAnalysis.Builder()
+                        .build()
+                        .also {
+                            it.setAnalyzer(cameraExecutor, LuminosityAnalyzer { luma ->
+                                Log.d(TAG, "Average luminosity: $luma")
+                            })
+                        }
+
+//                    val imageAnalysis = ImageAnalysis.Builder()
+//                        .setTargetResolution(Size(1280, 720))
+//                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+//                        .build()
+//                    imageAnalyzer.setAnalyzer(cameraExecutor, ImageAnalysis.Analyzer { image ->
+//                        val rotationDegrees = image.imageInfo.rotationDegrees
+//                        // insert your code here.
+//                    })
+
+                    //拍照预览有图片分析
+                    camera = cameraProvider?.bindToLifecycle(
+                        this, cameraSelector, imageAnalyzer,preview, imageCapture
+                    )
+                }
 
                 1 -> camera = cameraProvider?.bindToLifecycle(
                     this, cameraSelector, preview, videoCapture
@@ -506,6 +533,7 @@ class CameraXFragment : Fragment() {
         val mimeType = MimeTypeMap.getSingleton()
             .getMimeTypeFromExtension(savedMediaUri?.toFile()?.extension)
 
+        //刷新，通知文件系统
         MediaScannerConnection.scanFile(
             context,
             arrayOf(savedMediaUri?.toFile()?.absolutePath),
@@ -556,6 +584,8 @@ class CameraXFragment : Fragment() {
 
             val photoFile = createMediaFile(cameraConfig.cacheMediaDir, PHOTO_EXTENSION)
 
+
+
             // 设置拍照的元数据
             val metadata = ImageCapture.Metadata().apply {
                 // 用前置摄像头的话要镜像画面
@@ -579,15 +609,12 @@ class CameraXFragment : Fragment() {
 
                     override fun onImageSaved(output: OutputFileResults) {
                         indicateSuccess()  //移动到这里吧
-
                         //我就没有看见 output.savedUri 有过正常的数据
                         val savedUriPath = output.savedUri ?: Uri.fromFile(photoFile)
                         captureResultListener.onPhotoTaken(savedUriPath.path.toString())
                         flushMedia(savedUriPath)
-
                     }
                 })
-
         }
     }
 
@@ -728,6 +755,7 @@ class CameraXFragment : Fragment() {
             val timeStamp = SimpleDateFormat("yyyyMMddHHmmss").format(Date())
             createDir(baseFolder)
             return File(baseFolder + timeStamp + format)
+//            return File.createTempFile(timeStamp ,format,File(baseFolder))
         }
 
         /**

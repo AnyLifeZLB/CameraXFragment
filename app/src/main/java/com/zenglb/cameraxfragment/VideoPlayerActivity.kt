@@ -8,7 +8,11 @@ import android.widget.MediaController
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_video_player.*
 
-
+/**
+ * 这里仅仅是为了测试视频是否有问题
+ *
+ *
+ */
 class VideoPlayerActivity : AppCompatActivity() {
     private var mMP4Path: String? = null
     var mMediaController: MediaController? = null

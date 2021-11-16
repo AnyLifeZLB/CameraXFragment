@@ -31,6 +31,7 @@ import java.io.File
  */
 class CameraXActivity : AppCompatActivity() {
 
+    private val cacheMediasDir2: String = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).toString() + "/cameraX/images/"
     private val cacheMediasDir = Environment.getExternalStorageDirectory().toString() + "/cameraX/images/"
     private lateinit var cameraXFragment: CameraXFragment
 
@@ -49,7 +50,6 @@ class CameraXActivity : AppCompatActivity() {
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragment_container, cameraXFragment).commit()
 
-
         //拍照，拍视频的UI 操作的各种状态处理
         capture_btn.setCaptureListener(object : CaptureListener {
             override fun takePictures() {
@@ -66,7 +66,7 @@ class CameraXActivity : AppCompatActivity() {
                 cameraXFragment.stopTakeVideo(time)
             }
 
-            //长按拍视频的时候拉焦距缩放
+            //长按拍视频的时候，在屏幕滑动可以调整焦距缩放
             override fun recordZoom(zoom: Float) {
                 val a = zoom
             }
@@ -75,7 +75,6 @@ class CameraXActivity : AppCompatActivity() {
             override fun recordError(message: String) {
 
             }
-
         })
 
 

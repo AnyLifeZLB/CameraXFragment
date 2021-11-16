@@ -1,9 +1,13 @@
 package com.zenglb.camerax.main
 
+import android.content.Context
 import android.os.Environment
 import android.os.Parcelable
+import android.provider.MediaStore
 import androidx.camera.core.ImageCapture
+import com.zenglb.camerax.R
 import kotlinx.android.parcel.Parcelize
+import java.io.File
 
 /***
  * Camera X 配置
@@ -45,7 +49,10 @@ open class CameraConfig private constructor(val builder: Builder) : Parcelable {
     @Parcelize
     class Builder : Parcelable {
         internal var flashMode: Int = FLASH_MODE_OFF //Default Value
-        internal var cacheMediaDir: String = Environment.getExternalStorageDirectory().toString() + "/cameraX/images/"
+        internal var cacheMediaDir2: String = Environment.getExternalStorageDirectory().toString() + "/cameraX/images/"
+
+        internal var cacheMediaDir: String = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).toString() + "/cameraX/images/"
+
         internal var mediaMode: Int = MEDIA_MODE_PHOTO
 
         fun flashMode(flashMode: Int): Builder {
