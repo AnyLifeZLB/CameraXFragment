@@ -101,6 +101,7 @@ class CameraXFragment : Fragment() {
     private var imageCapture: ImageCapture? = null //拍照
     private var videoCapture: VideoCapture? = null //录像用例
 
+    //
     private val displayManager by lazy {
         requireContext().getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
     }
