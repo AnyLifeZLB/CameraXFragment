@@ -7,11 +7,14 @@ import android.os.Bundle
 import android.os.Environment
 import android.util.Log
 import android.view.KeyEvent
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.camera.core.ImageCapture
 import androidx.core.content.FileProvider
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.bumptech.glide.Glide
 import com.zenglb.camerax.main.*
+import com.zenglb.camerax.main.CameraXFragment.Companion.FLASH_ALL_ON
 import com.zhihu.matisse.Matisse
 import com.zhihu.matisse.MimeType
 import com.zhihu.matisse.engine.impl.GlideEngine
@@ -49,6 +52,7 @@ class CameraXActivity : AppCompatActivity() {
 
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragment_container, cameraXFragment).commit()
+
 
         //拍照，拍视频的UI 操作的各种状态处理
         capture_btn.setCaptureListener(object : CaptureListener {
@@ -104,10 +108,67 @@ class CameraXActivity : AppCompatActivity() {
 
         })
 
+//        //切换摄像头
+//        switch_btn.setOnClickListener {
+//            if (cameraXFragment.canSwitchCamera())
+//                cameraXFragment.switchCamera()
+//        }
+//
+//        flush_btn.setOnClickListener{
+//            cameraXFragment.setFlashMode(FLASH_ALL_ON)
+//        }
+
+
+
+        flush_btn.setOnClickListener {
+            if(flash_layout.visibility== View.VISIBLE){
+                flash_layout.visibility= View.INVISIBLE
+                switch_btn.visibility= View.VISIBLE
+            }else{
+                flash_layout.visibility= View.VISIBLE
+                switch_btn.visibility= View.INVISIBLE
+            }
+        }
+
+
+        flash_on.setOnClickListener {
+            initFlashSelectColor()
+            flash_on.setTextColor(resources.getColor(R.color.flash_selected))
+            flush_btn.setBackgroundResource(R.drawable.flash_on)
+            cameraXFragment.switchFlashMode()
+            cameraXFragment.setFlashMode(ImageCapture.FLASH_MODE_ON)
+        }
+
+        flash_off.setOnClickListener {
+            initFlashSelectColor()
+            flash_off.setTextColor(resources.getColor(R.color.flash_selected))
+            flush_btn.setBackgroundResource(R.drawable.flash_off)
+            cameraXFragment.setFlashMode(ImageCapture.FLASH_MODE_OFF)
+        }
+
+        flash_auto.setOnClickListener {
+            initFlashSelectColor()
+            flash_auto.setTextColor(resources.getColor(R.color.flash_selected))
+            flush_btn.setBackgroundResource(R.drawable.flash_auto)
+            cameraXFragment.setFlashMode(ImageCapture.FLASH_MODE_AUTO)
+        }
+
+        flash_all_on.setOnClickListener {
+            initFlashSelectColor()
+            flash_all_on.setTextColor(resources.getColor(R.color.flash_selected))
+            flush_btn.setBackgroundResource(R.drawable.flash_all_on)
+            cameraXFragment.setFlashMode(FLASH_ALL_ON)
+        }
+
+
         //切换摄像头
         switch_btn.setOnClickListener {
-            if (cameraXFragment.canSwitchCamera())
+            //要保持闪光灯上一次的模式
+            if (cameraXFragment.canSwitchCamera()){
                 cameraXFragment.switchCamera()
+
+//                cameraXFragment.setFlashMode(cameraXFragment.getF )
+            }
         }
 
 
@@ -126,6 +187,17 @@ class CameraXActivity : AppCompatActivity() {
         close_btn.setOnClickListener {
             this@CameraXActivity.finish()
         }
+    }
+
+
+    private fun initFlashSelectColor(){
+        flash_on.setTextColor(resources.getColor(R.color.white))
+        flash_off.setTextColor(resources.getColor(R.color.white))
+        flash_auto.setTextColor(resources.getColor(R.color.white))
+        flash_all_on.setTextColor(resources.getColor(R.color.white))
+
+        flash_layout.visibility= View.INVISIBLE
+        switch_btn.visibility= View.VISIBLE
     }
 
 

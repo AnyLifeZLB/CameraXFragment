@@ -1,21 +1,13 @@
 package com.zenglb.camerax.main
 
-import android.content.Context
 import android.os.Environment
 import android.os.Parcelable
-import android.provider.MediaStore
 import androidx.camera.core.ImageCapture
-import com.zenglb.camerax.R
 import kotlinx.android.parcel.Parcelize
-import java.io.File
 
 /***
- * Camera X 配置
+ * CameraX 相机配置
  *
- * 1 FLASH_MODE （ON/OFF）DEFAULT OFF
- * 2 CAMERA_SELECTOR (FRONT/BACK) DEFAULT BACK
- * 3 MEDIA_MODE （PIC/VIDOE&PIC）DEFAULT PIC ONLY
- * 4
  */
 @Parcelize
 open class CameraConfig private constructor(val builder: Builder) : Parcelable {
@@ -27,14 +19,16 @@ open class CameraConfig private constructor(val builder: Builder) : Parcelable {
         const val MEDIA_MODE_ALL = 3    //拍照视频都可以
 
         //2.闪光灯模式
-        const val FLASH_MODE_AUTO = 0
-        const val FLASH_MODE_ON = 1
-        const val FLASH_MODE_OFF = 2
+        const val FLASH_MODE_AUTO = ImageCapture.FLASH_MODE_AUTO
+        const val FLASH_MODE_ON = ImageCapture.FLASH_MODE_ON
+        const val FLASH_MODE_OFF = ImageCapture.FLASH_MODE_OFF
+        const val FLASH_MODE_ALL_ON = 777; //常亮模式
+
     }
 
 
-    //
-    var flashMode: Int
+
+    var flashMode: Int          //闪光灯常亮模式
     var cacheMediaDir: String
     var mediaMode: Int
 
