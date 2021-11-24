@@ -21,16 +21,18 @@ Google 爸爸给大家准备了CameraX，可以很方便的适配Android 5.0 + �
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragment_container, cameraXFragment).commit()
 ## 依赖
-   First:
+   First，   
+   
        repositories {
         google()
         mavenCentral() // 添加mavenCentral 依赖，Google 已经停止Jcenter
        }
 
-   Second:
+   Second，   
+   
        implementation "io.github.anylifezlb:CameraXFragment:1.1.2"
 
 
 ### 更多说明请下载Demo
+![image](https://user-images.githubusercontent.com/15169396/142362234-4300c052-cee6-4a1d-b835-baab7ae9e9b6.png)
 
-![image.png](https://upload-images.jianshu.io/upload_images/2376786-c119a43268ad31c3.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
