@@ -9,12 +9,14 @@ import android.util.Log
 import android.view.KeyEvent
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import androidx.camera.core.ImageCapture
 import androidx.core.content.FileProvider
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.bumptech.glide.Glide
 import com.zenglb.camerax.main.*
-import com.zenglb.camerax.main.CameraXFragment.Companion.FLASH_ALL_ON
+import com.zenglb.camerax.main.CameraConfig.Companion.CAMERA_FLASH_ALL_ON
+import com.zenglb.camerax.main.CameraConfig.Companion.CAMERA_FLASH_AUTO
+import com.zenglb.camerax.main.CameraConfig.Companion.CAMERA_FLASH_OFF
+import com.zenglb.camerax.main.CameraConfig.Companion.CAMERA_FLASH_ON
 import com.zhihu.matisse.Matisse
 import com.zhihu.matisse.MimeType
 import com.zhihu.matisse.engine.impl.GlideEngine
@@ -43,7 +45,7 @@ class CameraXActivity : AppCompatActivity() {
         setContentView(R.layout.activity_camera_x)
 
         val cameraConfig=CameraConfig.Builder()
-            .flashMode(CameraConfig.FLASH_MODE_OFF)
+            .flashMode(CameraConfig.CAMERA_FLASH_OFF)
             .mediaMode(CameraConfig.MEDIA_MODE_ALL) //视频拍照都可以
             .cacheMediasDir(cacheMediasDir)
             .build()
@@ -81,7 +83,6 @@ class CameraXActivity : AppCompatActivity() {
             }
         })
 
-
         //拍照录视频操作结果通知回调
         cameraXFragment.setCaptureResultListener(object : CaptureResultListener {
             override fun onVideoRecorded(filePath: String) {
@@ -105,19 +106,7 @@ class CameraXActivity : AppCompatActivity() {
                         .into(photo_view_btn)
                 }
             }
-
         })
-
-//        //切换摄像头
-//        switch_btn.setOnClickListener {
-//            if (cameraXFragment.canSwitchCamera())
-//                cameraXFragment.switchCamera()
-//        }
-//
-//        flush_btn.setOnClickListener{
-//            cameraXFragment.setFlashMode(FLASH_ALL_ON)
-//        }
-
 
 
         flush_btn.setOnClickListener {
@@ -131,45 +120,43 @@ class CameraXActivity : AppCompatActivity() {
         }
 
 
-        flash_on.setOnClickListener {
-            initFlashSelectColor()
-            flash_on.setTextColor(resources.getColor(R.color.flash_selected))
-            flush_btn.setBackgroundResource(R.drawable.flash_on)
-            cameraXFragment.switchFlashMode()
-            cameraXFragment.setFlashMode(ImageCapture.FLASH_MODE_ON)
-        }
-
-        flash_off.setOnClickListener {
-            initFlashSelectColor()
-            flash_off.setTextColor(resources.getColor(R.color.flash_selected))
-            flush_btn.setBackgroundResource(R.drawable.flash_off)
-            cameraXFragment.setFlashMode(ImageCapture.FLASH_MODE_OFF)
-        }
-
-        flash_auto.setOnClickListener {
-            initFlashSelectColor()
-            flash_auto.setTextColor(resources.getColor(R.color.flash_selected))
-            flush_btn.setBackgroundResource(R.drawable.flash_auto)
-            cameraXFragment.setFlashMode(ImageCapture.FLASH_MODE_AUTO)
-        }
-
-        flash_all_on.setOnClickListener {
-            initFlashSelectColor()
-            flash_all_on.setTextColor(resources.getColor(R.color.flash_selected))
-            flush_btn.setBackgroundResource(R.drawable.flash_all_on)
-            cameraXFragment.setFlashMode(FLASH_ALL_ON)
-        }
-
-
         //切换摄像头
         switch_btn.setOnClickListener {
             //要保持闪光灯上一次的模式
             if (cameraXFragment.canSwitchCamera()){
                 cameraXFragment.switchCamera()
-
-//                cameraXFragment.setFlashMode(cameraXFragment.getF )
             }
         }
+
+
+        flash_on.setOnClickListener {
+            initFlashSelectColor()
+            flash_on.setTextColor(resources.getColor(R.color.flash_selected))
+            flush_btn.setImageResource(R.drawable.flash_on)
+            cameraXFragment.setFlashMode(CAMERA_FLASH_ON)
+        }
+
+        flash_off.setOnClickListener {
+            initFlashSelectColor()
+            flash_off.setTextColor(resources.getColor(R.color.flash_selected))
+            flush_btn.setImageResource(R.drawable.flash_off)
+            cameraXFragment.setFlashMode(CAMERA_FLASH_OFF)
+        }
+
+        flash_auto.setOnClickListener {
+            initFlashSelectColor()
+            flash_auto.setTextColor(resources.getColor(R.color.flash_selected))
+            flush_btn.setImageResource(R.drawable.flash_auto)
+            cameraXFragment.setFlashMode(CAMERA_FLASH_AUTO)
+        }
+
+        flash_all_on.setOnClickListener {
+            initFlashSelectColor()
+            flash_all_on.setTextColor(resources.getColor(R.color.flash_selected))
+            flush_btn.setImageResource(R.drawable.flash_all_on)
+            cameraXFragment.setFlashMode(CAMERA_FLASH_ALL_ON)
+        }
+
 
 
         //去浏览媒体资源，使用的是知乎的开源库 Matisse，用法参考官方说明

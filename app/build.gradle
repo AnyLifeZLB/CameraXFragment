@@ -60,7 +60,6 @@ dependencies {
 //    implementation "io.github.anylifezlb:CameraXFragment:1.1.4"
 
 
-
     implementation "androidx.camera:camera-camera2:1.1.0-alpha04"
     implementation 'androidx.camera:camera-view:1.0.0-alpha24'
 
