@@ -14,9 +14,9 @@ open class CameraConfig private constructor(val builder: Builder) : Parcelable {
 
     companion object {
         //1.多媒体模式
+        const val MEDIA_MODE_ALL = 0    //拍照视频都可以
         const val MEDIA_MODE_PHOTO = 1  //仅仅拍照
         const val MEDIA_MODE_VIDEO = 2  //仅仅视频
-        const val MEDIA_MODE_ALL = 3    //拍照视频都可以
 
         //2.闪光灯模式
         const val CAMERA_FLASH_AUTO = ImageCapture.FLASH_MODE_AUTO
@@ -25,7 +25,6 @@ open class CameraConfig private constructor(val builder: Builder) : Parcelable {
         const val CAMERA_FLASH_ALL_ON = 777    //常亮模式
 
     }
-
 
 
     var flashMode: Int          //闪光灯常亮模式

@@ -1,13 +1,19 @@
 package com.zenglb.cameraxfragment
 
+import android.Manifest
+import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.util.Log
 import android.view.KeyEvent
+import android.view.OrientationEventListener
+import android.view.Surface
 import android.view.View
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
@@ -30,27 +36,31 @@ import java.io.File
  * 1.CameraX Extensions 是可选插件，您可以在支持的设备上添加效果。这些效果包括人像、HDR、夜间模式和美颜
  * 2.图片分析：无缝访问缓冲区以便在算法中使用，例如传入 MLKit
  * 3.切换为录制视频模式的时候还会闪屏黑屏
- * 4.第一个版本先不录制视频了
+ * 4.要适配分区存储
  *
  *
  */
-class CameraXActivity : AppCompatActivity() {
-
-    private val cacheMediasDir2: String = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).toString() + "/cameraX/images/"
-    private val cacheMediasDir = Environment.getExternalStorageDirectory().toString() + "/cameraX/images/"
+class CameraXActivity : AppCompatActivity(), CameraXFragment.OnPermissionRequestListener {
+    private var cacheMediasDir =
+        Environment.getExternalStorageDirectory().toString() + "/cameraX/images/"
     private lateinit var cameraXFragment: CameraXFragment
+    private lateinit var mOrientationListener: OrientationEventListener
+
+    //有些应用希望能添加位置信息在水印上面
+    private val perms = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_camera_x)
 
-        val cameraConfig=CameraConfig.Builder()
+        val cameraConfig = CameraConfig.Builder()
             .flashMode(CameraConfig.CAMERA_FLASH_OFF)
-            .mediaMode(CameraConfig.MEDIA_MODE_ALL) //视频拍照都可以
+            .mediaMode(CameraConfig.MEDIA_MODE_ALL)   //视频拍照都可以
             .cacheMediasDir(cacheMediasDir)
             .build()
 
         cameraXFragment = CameraXFragment.newInstance(cameraConfig)
+        cameraXFragment.addRequestPermission(perms) //添加需要多申请的权限，比如水印相机需要定位权限
 
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragment_container, cameraXFragment).commit()
@@ -77,7 +87,7 @@ class CameraXActivity : AppCompatActivity() {
                 val a = zoom
             }
 
-            //录制视频错误（拍照也有错误，这里还是不处理了吧）
+            //录制视频错误（拍照也会有错误，先不处理了吧）
             override fun recordError(message: String) {
 
             }
@@ -108,22 +118,20 @@ class CameraXActivity : AppCompatActivity() {
             }
         })
 
-
         flush_btn.setOnClickListener {
-            if(flash_layout.visibility== View.VISIBLE){
-                flash_layout.visibility= View.INVISIBLE
-                switch_btn.visibility= View.VISIBLE
-            }else{
-                flash_layout.visibility= View.VISIBLE
-                switch_btn.visibility= View.INVISIBLE
+            if (flash_layout.visibility == View.VISIBLE) {
+                flash_layout.visibility = View.INVISIBLE
+                switch_btn.visibility = View.VISIBLE
+            } else {
+                flash_layout.visibility = View.VISIBLE
+                switch_btn.visibility = View.INVISIBLE
             }
         }
-
 
         //切换摄像头
         switch_btn.setOnClickListener {
             //要保持闪光灯上一次的模式
-            if (cameraXFragment.canSwitchCamera()){
+            if (cameraXFragment.canSwitchCamera()) {
                 cameraXFragment.switchCamera()
             }
         }
@@ -135,28 +143,24 @@ class CameraXActivity : AppCompatActivity() {
             flush_btn.setImageResource(R.drawable.flash_on)
             cameraXFragment.setFlashMode(CAMERA_FLASH_ON)
         }
-
         flash_off.setOnClickListener {
             initFlashSelectColor()
             flash_off.setTextColor(resources.getColor(R.color.flash_selected))
             flush_btn.setImageResource(R.drawable.flash_off)
             cameraXFragment.setFlashMode(CAMERA_FLASH_OFF)
         }
-
         flash_auto.setOnClickListener {
             initFlashSelectColor()
             flash_auto.setTextColor(resources.getColor(R.color.flash_selected))
             flush_btn.setImageResource(R.drawable.flash_auto)
             cameraXFragment.setFlashMode(CAMERA_FLASH_AUTO)
         }
-
         flash_all_on.setOnClickListener {
             initFlashSelectColor()
             flash_all_on.setTextColor(resources.getColor(R.color.flash_selected))
             flush_btn.setImageResource(R.drawable.flash_all_on)
             cameraXFragment.setFlashMode(CAMERA_FLASH_ALL_ON)
         }
-
 
 
         //去浏览媒体资源，使用的是知乎的开源库 Matisse，用法参考官方说明
@@ -174,17 +178,62 @@ class CameraXActivity : AppCompatActivity() {
         close_btn.setOnClickListener {
             this@CameraXActivity.finish()
         }
+
+
+        //相机的UI在横竖屏幕可以对应修改UI 啊
+        mOrientationListener = object : OrientationEventListener(baseContext) {
+            override fun onOrientationChanged(orientation: Int) {
+                // Monitors orientation values to determine the target rotation value
+                // 这个可以微调
+                val rotation: Int = when (orientation) {
+                    in 45..134 -> Surface.ROTATION_270
+                    in 135..224 -> Surface.ROTATION_180
+                    in 225..314 -> Surface.ROTATION_90
+                    else -> Surface.ROTATION_0
+                }
+
+                when (rotation) {
+                    Surface.ROTATION_270 -> {
+
+                    }
+                    Surface.ROTATION_180 -> {
+
+                    }
+                    Surface.ROTATION_90 -> {
+
+                    }
+                    Surface.ROTATION_0 -> {
+
+                    }
+                }
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (mOrientationListener.canDetectOrientation()) {
+            mOrientationListener.enable()
+        } else {
+            mOrientationListener.disable()
+        }
     }
 
 
-    private fun initFlashSelectColor(){
+    override fun onPause() {
+        super.onPause()
+        mOrientationListener.disable();
+    }
+
+
+    private fun initFlashSelectColor() {
         flash_on.setTextColor(resources.getColor(R.color.white))
         flash_off.setTextColor(resources.getColor(R.color.white))
         flash_auto.setTextColor(resources.getColor(R.color.white))
         flash_all_on.setTextColor(resources.getColor(R.color.white))
 
-        flash_layout.visibility= View.INVISIBLE
-        switch_btn.visibility= View.VISIBLE
+        flash_layout.visibility = View.INVISIBLE
+        switch_btn.visibility = View.VISIBLE
     }
 
 
@@ -210,5 +259,37 @@ class CameraXActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * 根据工信部的要求申请权限前需要向用户说明权限的明确具体用途，请根据业务和法务要求组织语言进行描述
+     *
+     *
+     * @param permissions 需要申请的权限组合，如果为空说明底层CameraX 所需要的权限都申请好了
+     * @param requestCode 有权限需要申请值为{@link CameraXFragment} 否则为0
+     */
+    override fun onBeforePermissionRequest(permissions:Array<String>,requestCode:Int) {
+        if(permissions.isEmpty()) return
 
+        val builder = AlertDialog.Builder(this@CameraXActivity)
+        builder.setTitle(title)
+        builder.setMessage("     根据工信部的要求申请权限前需要向用户说明权限的明确具体用途，请根据业务和法务组织语言进行描述")
+        builder.setCancelable(false)
+        builder.setPositiveButton("知道了，继续") { dialog, which ->
+
+
+            cameraXFragment.onRequestPermission(permissions,requestCode)
+        }
+
+        val permissionDialog = builder.create()
+        permissionDialog.show()
+        permissionDialog.getButton(DialogInterface.BUTTON_NEGATIVE).setTextColor(Color.BLACK)
+    }
+
+    /**
+     * 被拒绝的权限
+     *
+     */
+    override fun onAfterPermissionDeny(permissions: Array<String>, requestCode: Int) {
+        //
+        val a=1;
+    }
 }

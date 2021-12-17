@@ -8,10 +8,12 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="../../../../layout/custom_preview.xml" value="0.34322916666666664" />
         <entry key="app/src/main/res/drawable/ic_baseline_flash_on_24.xml" value="0.27395833333333336" />
         <entry key="app/src/main/res/drawable/ic_flash_off_24.xml" value="0.27395833333333336" />
         <entry key="app/src/main/res/drawable/ic_switch.xml" value="0.221875" />
         <entry key="app/src/main/res/layout/activity_camera_x.xml" value="0.15172101449275363" />
+        <entry key="app/src/main/res/layout/fragment_blank2.xml" value="0.2875905797101449" />
         <entry key="camerax/src/main/res/layout/fragment_camerax.xml" value="0.156912209889001" />
       </map>
     </option>

@@ -3,4 +3,16 @@
 <resources>
     <string name="app_name">CameraXFragment</string>
 
+    <string name="camera_permission_title">相机权限</string>
+    <string name="camera_permission_content">拍照需要你授权相机权限才能进行，请前往设置进行授权</string>
+    <string name="camera_storage_video_permission_content">相机进行拍照和录制视频需要你授权存储以及录音权限才能进行，请前往设置进行授权</string>
+    <string name="go_set_permission_btn">去设置</string>
+    <string name="cancel_permission_btn">下次再说</string>
+
+
+    <string name="permission_tips">为了给您提供优质高效的服务，我们请求获得以下权限，您也可以在系统中再次关闭这些权限。</string>
+    <string name="android.permission.ACCESS_FINE_LOCATION">位置权限：相机，打卡，前海合作区正在大搞建设，人民健康万岁cxgfd \n\n</string>
+    <string name="android.permission.CAMERA">相机权限：相机，打卡，前海合作区正在大搞建设，人民健康万岁3452542class Manifest \n\n</string>
+    <string name="android.permission.WRITE_EXTERNAL_STORAGE">储存访问权限：相机，打卡，前海合作区正在大搞建设，人民健康万岁sasaag314321 \n\n</string>
+
 </resources>

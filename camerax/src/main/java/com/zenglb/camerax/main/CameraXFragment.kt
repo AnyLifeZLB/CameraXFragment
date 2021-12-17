@@ -2,10 +2,7 @@ package com.zenglb.camerax.main
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
+import android.content.*
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.Point
@@ -14,6 +11,7 @@ import android.hardware.display.DisplayManager
 import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.*
+import android.provider.Settings
 import android.util.DisplayMetrics
 import android.util.Log
 import android.util.Size
@@ -21,6 +19,8 @@ import android.view.*
 import android.webkit.MimeTypeMap
 import android.widget.FrameLayout
 import android.widget.Toast
+import androidx.annotation.NonNull
+import androidx.appcompat.app.AlertDialog
 import androidx.camera.core.*
 import androidx.camera.core.ImageCapture.*
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -37,6 +37,7 @@ import com.zenglb.camerax.R
 import com.zenglb.camerax.main.CameraConfig.Companion.CAMERA_FLASH_ALL_ON
 import com.zenglb.camerax.main.CameraConfig.Companion.MEDIA_MODE_PHOTO
 import com.zenglb.camerax.utils.ANIMATION_SLOW_MILLIS
+import com.zenglb.camerax.utils.LuminosityAnalyzer
 import kotlinx.android.synthetic.main.fragment_camerax.*
 import java.io.File
 import java.io.IOException
@@ -52,11 +53,15 @@ import kotlin.math.min
 const val KEY_CAMERA_EVENT_ACTION = "key_camera_event_action"
 const val KEY_CAMERA_EVENT_EXTRA = "key_camera_event_extra"
 
-private const val CAMERA_CONFIG = "camera_config"    //相机的配置
+private const val CAMERA_CONFIG = "camera_config"   //相机的配置
 
 /**
- * 新版本拍照拍视频方案
- * 解决老版本拍照不清晰，闪光灯,照片删除被系统侦查和流程问题
+ * 1.新版本拍照&拍视频方案，需要适配分区存储TargetSDK>30
+ * 2.从拍照模式切换到视频模式的时候能否不要黑屏幕
+ * 3.点击聚焦要屏蔽操作区域
+ *
+ *
+ * setUpCamera() --> initCameraUseCases() --> bindCameraUseCase
  *
  *
  * Android库发布至MavenCentral流程详解
@@ -134,16 +139,52 @@ class CameraXFragment : Fragment() {
         } ?: Unit
     }
 
+    private var permissionRequestListener: OnPermissionRequestListener? = null
+
+    // This interface can be implemented by the Activity, parent Fragment,
+    // or a separate test implementation.
+    interface OnPermissionRequestListener {
+        fun onBeforePermissionRequest(permissions: Array<String>, requestCode: Int)
+        fun onAfterPermissionDeny(permissions: Array<String>, requestCode: Int)
+    }
+
+
+    override fun onAttach(@NonNull context: Context) {
+        super.onAttach(context)
+        // 要求该 Fragment 所附着的 Activity 必须实现这个方法, 工信部要求申请权限必须要给用户说明申请权限的用途
+        // 一般是弹出一个dialog 的形式，具体的样式，相应的开发接入时候可以在接口实现中实现
+        try {
+            permissionRequestListener = context as OnPermissionRequestListener
+        } catch (e: Exception) {
+            Toast.makeText(
+                getContext(),
+                "你需要在本Fragment 的宿主Activity中实现callback 对应的接口",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         arguments?.let {
             cameraConfig = it.getParcelable(CAMERA_CONFIG)!!
-            if(cameraConfig.mediaMode!=MEDIA_MODE_PHOTO){
-                REQUIRED_PERMISSIONS=REQUIRED_PERMISSIONS.plusElement(Manifest.permission.RECORD_AUDIO)
+            if (cameraConfig.mediaMode != MEDIA_MODE_PHOTO) {
+                //配置了需要拍视频需要多一个权限
+                REQUIRED_PERMISSIONS =
+                    REQUIRED_PERMISSIONS.plusElement(Manifest.permission.RECORD_AUDIO)
             }
         }
+    }
 
+    /**
+     * 需要添加的权限也一起申请了
+     *
+     */
+    fun addRequestPermission(permissions:Array<String>){
+        REQUIRED_PERMISSIONS =
+            REQUIRED_PERMISSIONS.plus(permissions)
+        REQUIRED_PERMISSIONS.distinct()
     }
 
 
@@ -157,8 +198,6 @@ class CameraXFragment : Fragment() {
         //CameraFragment 最外层的ConstraintLayout
         cameraUIContainer = view as FrameLayout
         cameraPreview = cameraUIContainer.findViewById(R.id.camera_preview)
-
-//        requireContext()
 
         // 初始化我们的后台执行器 Initialize our background executor
         cameraExecutor = Executors.newSingleThreadExecutor()  //可能需要更多的处理
@@ -181,9 +220,6 @@ class CameraXFragment : Fragment() {
 //            // Set up the camera and its use cases
 ////            setUpCamera()
 //        }
-
-        createDir(Environment.getExternalStorageDirectory().toString() + "/cameraX/images")
-
     }
 
 
@@ -223,8 +259,7 @@ class CameraXFragment : Fragment() {
         val metrics = DisplayMetrics().also { cameraPreview.display.getRealMetrics(it) }
         val screenAspectRatio = aspectRatio(metrics.widthPixels, metrics.heightPixels)
 
-        val size=Size(metrics.widthPixels, metrics.heightPixels)
-
+        val size = Size(metrics.widthPixels, metrics.heightPixels)
         val rotation = cameraPreview.display.rotation
 
         // CameraProvider
@@ -258,7 +293,6 @@ class CameraXFragment : Fragment() {
 //            .setTargetResolution(size)
             .build()
 
-
         // 视频的还不是很成熟，不一定都能用
         videoCapture = VideoCapture.Builder()//录像用例配置
             .setTargetAspectRatio(screenAspectRatio) //设置高宽比「我比较喜欢全屏」
@@ -272,31 +306,31 @@ class CameraXFragment : Fragment() {
 
 
         val orientationEventListener = object : OrientationEventListener(this.context) {
-            override fun onOrientationChanged(orientation : Int) {
+            override fun onOrientationChanged(orientation: Int) {
                 // Monitors orientation values to determine the target rotation value
-                val rotation : Int = when (orientation) {
+                val rotation: Int = when (orientation) {
                     in 45..134 -> Surface.ROTATION_270
                     in 135..224 -> Surface.ROTATION_180
                     in 225..314 -> Surface.ROTATION_90
                     else -> Surface.ROTATION_0
                 }
-
-                imageCapture?.targetRotation = rotation
+                //拍出的照片要不要随着设备旋转！
+//                imageCapture?.targetRotation = rotation
             }
         }
         orientationEventListener.enable()
 
-        bindCameraUseCase(0)
+        bindCameraUseCase(TAKE_PHOTO_CASE)
 
-        // Attach the viewfinder's surface provider to preview use case
-        preview?.setSurfaceProvider(cameraPreview.surfaceProvider)
+//        // Attach the viewfinder's surface provider to preview use case
+//        preview?.setSurfaceProvider(cameraPreview.surfaceProvider)
 
         initCameraListener()
 
-        if(cameraConfig.flashMode== CAMERA_FLASH_ALL_ON){
+        if (cameraConfig.flashMode == CAMERA_FLASH_ALL_ON) {
             setFlashAlwaysOn(true)
-        }else{
-            imageCapture?.setFlashMode(cameraConfig.flashMode)
+        } else {
+            imageCapture?.flashMode = cameraConfig.flashMode
         }
 
     }
@@ -314,7 +348,6 @@ class CameraXFragment : Fragment() {
             CameraXPreviewViewTouchListener.CustomTouchListener {
             // 放大缩小操作
             override fun zoom(delta: Float) {
-                Log.d(TAG, "缩放")
                 zoomState?.value?.let {
                     val currentZoomRatio = it.zoomRatio
                     camera?.cameraControl!!.setZoomRatio(currentZoomRatio * delta)
@@ -323,7 +356,6 @@ class CameraXFragment : Fragment() {
 
             // 点击操作
             override fun click(x: Float, y: Float) {
-                Log.d(TAG, "单击")
                 val factory = camera_preview.meteringPointFactory
                 // 设置对焦位置
                 val point = factory.createPoint(x, y)
@@ -333,7 +365,8 @@ class CameraXFragment : Fragment() {
                     .build()
                 // 执行对焦
                 focus_view!!.startFocus(Point(x.toInt(), y.toInt()))
-                val future: ListenableFuture<*> = camera?.cameraControl!!.startFocusAndMetering(action)
+                val future: ListenableFuture<*> =
+                    camera?.cameraControl!!.startFocusAndMetering(action)
                 future.addListener({
                     try {
                         // 获取对焦结果
@@ -346,12 +379,11 @@ class CameraXFragment : Fragment() {
                     } catch (e: java.lang.Exception) {
                         Log.e(TAG, e.toString())
                     }
-                }, ContextCompat.getMainExecutor(this@CameraXFragment.requireContext()) )
+                }, ContextCompat.getMainExecutor(this@CameraXFragment.requireContext()))
             }
 
             // 双击操作
             override fun doubleClick(x: Float, y: Float) {
-                Log.d(TAG, "双击")
                 // 双击放大缩小
                 val currentZoomRatio = zoomState?.value!!.zoomRatio
                 if (currentZoomRatio > zoomState.value!!.minZoomRatio) {
@@ -403,8 +435,6 @@ class CameraXFragment : Fragment() {
     }
 
 
-
-
     /**
      * 拍摄视频移动手指控制缩放,支持中...
      *
@@ -418,7 +448,7 @@ class CameraXFragment : Fragment() {
      *
      */
     fun takeVideo() {
-        bindCameraUseCase(1)
+        bindCameraUseCase(TAKE_VIDEO_CASE)
         val videoFile = createMediaFile(cameraConfig.cacheMediaDir, VIDEO_EXTENSION)
 
         // 设置视频的元数据，这里需要后期再完善吧
@@ -432,22 +462,28 @@ class CameraXFragment : Fragment() {
             .setMetadata(metadata)
             .build()
 
-        //开始录像
+        //开始录像,需要多一个权限
         if (checkSelfPermission(requireContext(), Manifest.permission.RECORD_AUDIO)
-            != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(REQUIRED_PERMISSIONS, PERMISSIONS_REQUEST_CODE)
-            return
-        }else{
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            permissionRequestListener?.onBeforePermissionRequest(
+                REQUIRED_PERMISSIONS,
+                PERMISSIONS_REQUEST_CODE
+            )
+        } else {
+            permissionRequestListener?.onBeforePermissionRequest(
+                arrayOf(),
+                PERMISSIONS_REQUEST_CODE
+            )
+
             videoCapture?.startRecording(
                 outputOptions,
                 Executors.newSingleThreadExecutor(),
                 object : VideoCapture.OnVideoSavedCallback {
                     override fun onVideoSaved(outputFileResults: VideoCapture.OutputFileResults) {
-                        Log.e(TAG, "onVideoSaved: ${outputFileResults.savedUri?.path.toString()}")
                         flushMedia(outputFileResults.savedUri)
-
                         Handler(Looper.getMainLooper()).post(Runnable {
-                            bindCameraUseCase(0)
+                            bindCameraUseCase(TAKE_PHOTO_CASE)
                         })
 
                         captureResultListener.onVideoRecorded(outputFileResults.savedUri?.path.toString())
@@ -455,7 +491,7 @@ class CameraXFragment : Fragment() {
 
                     override fun onError(error: Int, message: String, cause: Throwable?) {
                         Handler(Looper.getMainLooper()).post(Runnable {
-                            bindCameraUseCase(0)
+                            bindCameraUseCase(TAKE_PHOTO_CASE)
                         })
                     }
                 })
@@ -502,13 +538,6 @@ class CameraXFragment : Fragment() {
 
         // Re-bind use cases to update selected camera
         initCameraUseCases()
-
-
-//        //保留常量模式的设置
-//        if(cameraConfig.flashMode== FLASH_MODE_ALL_ON){
-//            setFlashAlwaysOn(true)
-//        }
-
     }
 
 
@@ -516,12 +545,12 @@ class CameraXFragment : Fragment() {
      * 切换闪光模式,  打开，关闭，自动，长亮
      *
      */
-    fun setFlashMode(flashMode:Int) :Int{
-        if(flashMode==CAMERA_FLASH_ALL_ON){
-            cameraConfig.flashMode=CAMERA_FLASH_ALL_ON
+    fun setFlashMode(flashMode: Int): Int {
+        if (flashMode == CAMERA_FLASH_ALL_ON) {
+            cameraConfig.flashMode = CAMERA_FLASH_ALL_ON
             setFlashAlwaysOn(true)
-        }else{
-            cameraConfig.flashMode=flashMode
+        } else {
+            cameraConfig.flashMode = flashMode
             setFlashAlwaysOn(false)
             imageCapture?.setFlashMode(cameraConfig.flashMode)
         }
@@ -529,8 +558,7 @@ class CameraXFragment : Fragment() {
     }
 
 
-
-    private fun setFlashAlwaysOn(status:Boolean){
+    private fun setFlashAlwaysOn(status: Boolean) {
         camera?.cameraControl?.enableTorch(status)
     }
 
@@ -541,38 +569,65 @@ class CameraXFragment : Fragment() {
      * 1：拍视频
      */
     private fun bindCameraUseCase(captureMode: Int) {
-        // 再次重新绑定前应该先解绑
-        cameraProvider?.unbindAll()
 
+        //图像分析，我们还不用，仅仅用于练习，正式打包的时候去除！！！
+        val imageAnalyzer = ImageAnalysis.Builder()
+            // enable the following line if RGBA output is needed.
+            // .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
+            .setTargetResolution(Size(1280, 720))
+            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+            .build()
+            .also {
+                it.setAnalyzer(cameraExecutor, LuminosityAnalyzer { luma ->
+                    Log.d(TAG, "Average luminosity: $luma")
+                })
+            }
+
+
+        //再次重新绑定前应该先解绑
+        cameraProvider?.unbindAll()
         try {
             //目前一次无法绑定拍照和摄像一起
             when (captureMode) {
                 //拍照预览的时候尝试图片分析
-                0 -> {
+                TAKE_PHOTO_CASE -> {
                     camera = cameraProvider?.bindToLifecycle(
-                        this, cameraSelector,preview, imageCapture
+                        this, cameraSelector, preview, imageCapture, imageAnalyzer
                     )
                 }
 
-                1 -> camera = cameraProvider?.bindToLifecycle(
-                    this, cameraSelector, preview, videoCapture
-                )
+                TAKE_VIDEO_CASE -> {
+                    camera = cameraProvider?.bindToLifecycle(
+                        this, cameraSelector, preview, videoCapture, imageAnalyzer
+                    )
+                }
             }
 
-//            // Attach the viewfinder's surface provider to preview use case
-//            preview?.setSurfaceProvider(cameraPreview.surfaceProvider)
+            // Attach the viewfinder's surface provider to preview use case
+            preview?.setSurfaceProvider(cameraPreview.surfaceProvider)
         } catch (exc: Exception) {
             Log.e(TAG, "Use case binding failed", exc)
         }
-
     }
+
 
     /**
      * 获取是前置还是后置模式
      *
      */
-    fun getLensFacing():Int{
+    fun getLensFacing(): Int {
         return lensFacing;
+    }
+
+
+    private fun indicateTakePhoto(){
+        if (CameraSelector.LENS_FACING_BACK == lensFacing) {
+            indicateSuccess(20)
+        } else {
+            if (cameraConfig.flashMode == CAMERA_FLASH_ALL_ON || cameraConfig.flashMode == FLASH_MODE_ON) {
+                indicateSuccess(20)   //先不要柔白补光了 500
+            }
+        }
     }
 
     /**
@@ -580,13 +635,6 @@ class CameraXFragment : Fragment() {
      *
      */
     fun takePhoto() {
-        if(CameraSelector.LENS_FACING_BACK == lensFacing){
-            indicateSuccess(20)
-        }else{
-            if(cameraConfig.flashMode== CAMERA_FLASH_ALL_ON|| cameraConfig.flashMode==FLASH_MODE_ON){
-                indicateSuccess(500)
-            }
-        }
 
         // Get a stable reference of the modifiable image capture use case
         imageCapture?.let { imageCapture ->
@@ -614,6 +662,9 @@ class CameraXFragment : Fragment() {
                     }
 
                     override fun onImageSaved(output: OutputFileResults) {
+
+                        indicateTakePhoto()
+
                         //我就没有看见 output.savedUri 有过正常的数据
                         val savedUriPath = output.savedUri ?: Uri.fromFile(photoFile)
                         captureResultListener.onPhotoTaken(savedUriPath.path.toString())
@@ -627,7 +678,7 @@ class CameraXFragment : Fragment() {
      * 拍照显示成功的提示
      *
      */
-    private fun indicateSuccess(durationTime:Long) {
+    private fun indicateSuccess(durationTime: Long) {
         // 显示一个闪光动画来告知用户照片已经拍好了。在华为等手机上好像有点问题啊 cameraPreview
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             cameraUIContainer.postDelayed({
@@ -667,12 +718,17 @@ class CameraXFragment : Fragment() {
 
     override fun onStart() {
         super.onStart()
-
-        if (!hasPermissions(requireContext())) {
-            // Request camera-related permissions
-            requestPermissions(REQUIRED_PERMISSIONS, PERMISSIONS_REQUEST_CODE)
+        if (!hasAllPermissions(requireContext())) {
+            //根据隐私合规要求，需要拦截检测哪些权限没有授权，并给予相应的温馨提示
+            permissionRequestListener?.onBeforePermissionRequest(
+                REQUIRED_PERMISSIONS,
+                PERMISSIONS_REQUEST_CODE
+            )
         } else {
-
+            permissionRequestListener?.onBeforePermissionRequest(
+                arrayOf(),
+                PERMISSIONS_REQUEST_CODE
+            )
             // 等待所有的View 都能正确的显示出
             cameraPreview.post {
                 // Keep track of the display in which this view is attached
@@ -683,25 +739,38 @@ class CameraXFragment : Fragment() {
         }
     }
 
-
-
-
+    /**
+     *
+     */
+    fun onRequestPermission(permissions: Array<String>, requestCode: Int) {
+        requestPermissions(REQUIRED_PERMISSIONS, PERMISSIONS_REQUEST_CODE)
+    }
 
     /**
      *  请求相机权限
      */
     override fun onRequestPermissionsResult(
         requestCode: Int, permissions: Array<String>,
-        grantResults: IntArray) {
+        grantResults: IntArray
+    ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-
         if (requestCode == PERMISSIONS_REQUEST_CODE) {
-            if (grantResults.isNotEmpty()&&grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                //这里重新初始化相机 ？？？
-                setUpCamera()
-            } else {
-                Toast.makeText(context, "请授权相机需要的拍照和存储权限", Toast.LENGTH_LONG).show()
+            var permissionsDeny: Array<String> = arrayOf()
+
+            for (index in permissions.indices) {
+                if (grantResults[index] == PackageManager.PERMISSION_DENIED) {
+                    permissionsDeny=permissionsDeny.plusElement(permissions[index])
+                }
+                when (permissions[index]) {
+                    Manifest.permission.CAMERA -> {
+                        if (grantResults[index] == PackageManager.PERMISSION_GRANTED) {
+                            //只要有相机权限就可以初始化相机了
+                            setUpCamera()
+                        }
+                    }
+                }
             }
+            permissionRequestListener?.onAfterPermissionDeny(permissionsDeny,requestCode)
         }
     }
 
@@ -734,17 +803,20 @@ class CameraXFragment : Fragment() {
         private const val TAG = "CameraXFragment"
         private const val PHOTO_EXTENSION = ".jpg"
         private const val VIDEO_EXTENSION = ".mp4"
-        private const val PERMISSIONS_REQUEST_CODE = 1086
+        private const val TAKE_PHOTO_CASE = 1
+        private const val TAKE_VIDEO_CASE = 2
+
+        private const val PERMISSIONS_REQUEST_CODE = 1619
         private const val RATIO_4_3_VALUE = 4.0 / 3.0
         private const val RATIO_16_9_VALUE = 16.0 / 9.0
 
         private var REQUIRED_PERMISSIONS = arrayOf(
-            Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.READ_EXTERNAL_STORAGE
+            Manifest.permission.CAMERA,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
         )
 
         /** Convenience method used to check if all permissions required by this app are granted */
-        fun hasPermissions(context: Context) = REQUIRED_PERMISSIONS.all {
+        fun hasAllPermissions(context: Context) = REQUIRED_PERMISSIONS.all {
             checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
         }
 
@@ -758,7 +830,6 @@ class CameraXFragment : Fragment() {
             val timeStamp = SimpleDateFormat("yyyyMMddHHmmss").format(Date())
             createDir(baseFolder)
             return File(baseFolder + timeStamp + format)
-//            return File.createTempFile(timeStamp ,format,File(baseFolder))
         }
 
         /**
@@ -794,3 +865,4 @@ class CameraXFragment : Fragment() {
 
 
 }
+
