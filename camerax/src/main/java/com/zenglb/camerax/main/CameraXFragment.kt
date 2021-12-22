@@ -60,9 +60,7 @@ private const val CAMERA_CONFIG = "camera_config"   //相机的配置
  * 2.从拍照模式切换到视频模式的时候能否不要黑屏幕
  * 3.点击聚焦要屏蔽操作区域
  *
- *
  * setUpCamera() --> initCameraUseCases() --> bindCameraUseCase
- *
  *
  * Android库发布至MavenCentral流程详解
  * https://juejin.cn/post/6953598441817636900
@@ -152,7 +150,7 @@ class CameraXFragment : Fragment() {
     override fun onAttach(@NonNull context: Context) {
         super.onAttach(context)
         // 要求该 Fragment 所附着的 Activity 必须实现这个方法, 工信部要求申请权限必须要给用户说明申请权限的用途
-        // 一般是弹出一个dialog 的形式，具体的样式，相应的开发接入时候可以在接口实现中实现
+        // 一般是弹出一个dialog 的形式，具体的样式，相应的开发接入时候可以在接口实现中实现,你可以空实现
         try {
             permissionRequestListener = context as OnPermissionRequestListener
         } catch (e: Exception) {
@@ -182,9 +180,12 @@ class CameraXFragment : Fragment() {
      *
      */
     fun addRequestPermission(permissions:Array<String>){
-        REQUIRED_PERMISSIONS =
-            REQUIRED_PERMISSIONS.plus(permissions)
-        REQUIRED_PERMISSIONS.distinct()
+        permissions.forEach {
+            if(!REQUIRED_PERMISSIONS.contains(it)){
+                REQUIRED_PERMISSIONS =
+                    REQUIRED_PERMISSIONS.plus(permissions)
+            }
+        }
     }
 
 
@@ -213,13 +214,6 @@ class CameraXFragment : Fragment() {
         // Every time the orientation of device changes, update rotation for use cases
         displayManager.registerDisplayListener(displayListener, null)
 
-//        // 等待所有的View 都能正确的显示出
-//        cameraPreview.post {
-//            // Keep track of the display in which this view is attached
-//            displayId = cameraPreview.display.displayId
-//            // Set up the camera and its use cases
-////            setUpCamera()
-//        }
     }
 
 
@@ -496,7 +490,6 @@ class CameraXFragment : Fragment() {
                     }
                 })
         }
-
     }
 
 
@@ -584,7 +577,7 @@ class CameraXFragment : Fragment() {
             }
 
 
-        //再次重新绑定前应该先解绑
+        //再次重新绑定前应该先解绑 , imageAnalyzer
         cameraProvider?.unbindAll()
         try {
             //目前一次无法绑定拍照和摄像一起
@@ -592,13 +585,13 @@ class CameraXFragment : Fragment() {
                 //拍照预览的时候尝试图片分析
                 TAKE_PHOTO_CASE -> {
                     camera = cameraProvider?.bindToLifecycle(
-                        this, cameraSelector, preview, imageCapture, imageAnalyzer
+                        this, cameraSelector, preview, imageCapture
                     )
                 }
 
                 TAKE_VIDEO_CASE -> {
                     camera = cameraProvider?.bindToLifecycle(
-                        this, cameraSelector, preview, videoCapture, imageAnalyzer
+                        this, cameraSelector, preview, videoCapture
                     )
                 }
             }
@@ -662,9 +655,7 @@ class CameraXFragment : Fragment() {
                     }
 
                     override fun onImageSaved(output: OutputFileResults) {
-
                         indicateTakePhoto()
-
                         //我就没有看见 output.savedUri 有过正常的数据
                         val savedUriPath = output.savedUri ?: Uri.fromFile(photoFile)
                         captureResultListener.onPhotoTaken(savedUriPath.path.toString())
@@ -715,7 +706,32 @@ class CameraXFragment : Fragment() {
         return cameraProvider?.hasCamera(CameraSelector.DEFAULT_FRONT_CAMERA) ?: false
     }
 
+    /**
+     * 销毁后各种处理后事啊
+     *
+     */
+    override fun onDestroyView() {
+        super.onDestroyView()
+        // Shut down our background executor
+        cameraExecutor.shutdown()
+        // Unregister the broadcast receivers and listeners
+        broadcastManager.unregisterReceiver(volumeDownReceiver)
+        displayManager.unregisterDisplayListener(displayListener)
+    }
 
+
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        // Inflate the layout for this fragment
+        return inflater.inflate(R.layout.fragment_camerax, container, false)
+    }
+
+    /**
+     * 有可能回来就取消了权限
+     *
+     */
     override fun onStart() {
         super.onStart()
         if (!hasAllPermissions(requireContext())) {
@@ -724,6 +740,12 @@ class CameraXFragment : Fragment() {
                 REQUIRED_PERMISSIONS,
                 PERMISSIONS_REQUEST_CODE
             )
+
+            if (checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
+                == PackageManager.PERMISSION_GRANTED) {
+                setUpCamera()
+            }
+
         } else {
             permissionRequestListener?.onBeforePermissionRequest(
                 arrayOf(),
@@ -740,7 +762,7 @@ class CameraXFragment : Fragment() {
     }
 
     /**
-     *
+     * 去请求权限
      */
     fun onRequestPermission(permissions: Array<String>, requestCode: Int) {
         requestPermissions(REQUIRED_PERMISSIONS, PERMISSIONS_REQUEST_CODE)
@@ -775,30 +797,6 @@ class CameraXFragment : Fragment() {
     }
 
 
-    /**
-     * 销毁后各种处理后事啊
-     *
-     */
-    override fun onDestroyView() {
-        super.onDestroyView()
-        // Shut down our background executor
-        cameraExecutor.shutdown()
-        // Unregister the broadcast receivers and listeners
-        broadcastManager.unregisterReceiver(volumeDownReceiver)
-        displayManager.unregisterDisplayListener(displayListener)
-
-    }
-
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_camerax, container, false)
-    }
-
-
     companion object {
         private const val TAG = "CameraXFragment"
         private const val PHOTO_EXTENSION = ".jpg"
@@ -823,7 +821,6 @@ class CameraXFragment : Fragment() {
         /**
          * 产生的素材都将统一放在Lebang 文件下，后续需要清楚才好管理
          *
-         * @return
          * @throws IOException
          */
         private fun createMediaFile(baseFolder: String?, format: String): File {

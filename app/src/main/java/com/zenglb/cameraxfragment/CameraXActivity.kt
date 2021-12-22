@@ -208,6 +208,12 @@ class CameraXActivity : AppCompatActivity(), CameraXFragment.OnPermissionRequest
                 }
             }
         }
+
+
+
+        if(Environment.isExternalStorageLegacy()){
+
+        }
     }
 
     override fun onResume() {
@@ -274,7 +280,6 @@ class CameraXActivity : AppCompatActivity(), CameraXFragment.OnPermissionRequest
         builder.setMessage("     根据工信部的要求申请权限前需要向用户说明权限的明确具体用途，请根据业务和法务组织语言进行描述")
         builder.setCancelable(false)
         builder.setPositiveButton("知道了，继续") { dialog, which ->
-
 
             cameraXFragment.onRequestPermission(permissions,requestCode)
         }

@@ -81,7 +81,4 @@ dependencies {
 
     // CameraX Lifecycle library
     api "androidx.camera:camera-lifecycle:$camera_version"
-
-
-
 }
