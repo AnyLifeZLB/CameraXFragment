@@ -41,5 +41,10 @@ class VideoPlayerActivity : AppCompatActivity() {
             }
         })
 
+
+        close_btn.setOnClickListener {
+            finish()
+        }
+
     }
 }

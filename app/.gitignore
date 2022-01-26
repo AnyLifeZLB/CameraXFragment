@@ -5,6 +5,7 @@
 build/*
 */build/*
 .idea/*
+.test/*
 .externalNativeBuild
 gradle/*
 local.properties

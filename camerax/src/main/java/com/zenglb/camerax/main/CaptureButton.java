@@ -16,7 +16,10 @@ import android.view.View;
 
 import com.zenglb.camerax.R;
 
-
+/**
+ * 拍照按钮，拍视频动画
+ *
+ */
 public class CaptureButton extends View {
     // 选择拍照 拍视频 或者都有
     public static final int BUTTON_STATE_ONLY_CAPTURE = 0x101;      //只能拍照

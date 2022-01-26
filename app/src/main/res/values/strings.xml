@@ -14,10 +14,9 @@
   ~ limitations under the License.
   -->
 <resources>
-    <string name="app_name">VSCameraX</string>
+    <string name="app_name">CameraXFragment</string>
     <string name="capture_button_alt">Capture</string>
     <string name="switch_camera_button_alt">Switch camera</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+
 
 </resources>

@@ -10,7 +10,7 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         applicationId "com.zenglb.cameraxfragment"
         minSdkVersion 21
-        //argetSdkVersion<=28，分区存储功能就不会开启
+        //targetSdkVersion<=28，分区存储功能就不会开启
         targetSdkVersion 28 //先不适配存储分区了，有需要请提PR 吧
         versionCode 1
         versionName "1.0.0"
@@ -40,9 +40,9 @@ android {
 
     buildTypes {
         debug {
-//            signingConfig signingConfigs.myAppConfig
-//            minifyEnabled true
-//            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.myAppConfig
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
 
         release {
@@ -59,12 +59,21 @@ dependencies {
     implementation project(':camerax')
 //    implementation "io.github.anylifezlb:CameraXFragment:1.1.4"
 
+//    // PictureSelector 基础 (必须)
+//    implementation 'io.github.lucksiege:pictureselector:v3.0.3'
+//    // 图片压缩 (按需引入)
+//    implementation 'io.github.lucksiege:compress:v3.0.3'
+//    // 图片裁剪 (按需引入)
+//    implementation 'io.github.lucksiege:ucrop:v3.0.3'
+
+    //知乎的图片加载好像不维护了，准备新的方案吧 ！！
+    implementation "com.zhihu.android:matisse:0.5.3-beta3"
+
 
     implementation "androidx.camera:camera-camera2:1.1.0-alpha04"
     implementation 'androidx.camera:camera-view:1.0.0-alpha24'
     implementation 'androidx.core:core-ktx:1.5.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.2'
-    implementation "com.zhihu.android:matisse:0.5.3-beta3"
 
     // Glide
     implementation 'com.github.bumptech.glide:glide:4.12.0'
@@ -74,6 +83,7 @@ dependencies {
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     kapt 'com.github.bumptech.glide:compiler:4.11.0'
 
+    implementation files('libs/AMap_Location_V5.6.1_20211115.jar')
 
     // Unit testing
     testImplementation 'androidx.test.ext:junit:1.1.3'

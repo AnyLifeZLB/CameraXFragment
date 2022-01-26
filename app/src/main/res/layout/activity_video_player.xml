@@ -18,4 +18,18 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+
+    <!-- Camera control and gallery buttons -->
+    <ImageButton
+        android:id="@+id/close_btn"
+        android:layout_width="45dp"
+        android:layout_height="45dp"
+        android:layout_margin="16dp"
+        android:background="@drawable/ic_return"
+        android:scaleType="fitCenter"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+
+
 </androidx.constraintlayout.widget.ConstraintLayout>

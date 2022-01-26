@@ -9,10 +9,12 @@
     <string name="go_set_permission_btn">去设置</string>
     <string name="cancel_permission_btn">下次再说</string>
 
+    <string name="permission_tips">CameraXFragment正常运行需要以下权限才能正常运行，我们将仅仅使用授权的权限用于CameraXFragment正常必要运行。</string>
+    <string name="android.permission.ACCESS_FINE_LOCATION">位置权限：获取拍照时候的位置信息\n\n</string>
+    <string name="android.permission.CAMERA">相机权限：打开摄像头获取图形信息 \n\n</string>
+    <string name="android.permission.RECORD_AUDIO">录音权限：长按拍摄视频的时候采集麦克风声音信号 \n\n</string>
+    <string name="android.permission.WRITE_EXTERNAL_STORAGE">储存访问权限：将拍摄的照片存储在手机中，并读取预览 \n\n</string>
 
-    <string name="permission_tips">为了给您提供优质高效的服务，我们请求获得以下权限，您也可以在系统中再次关闭这些权限。</string>
-    <string name="android.permission.ACCESS_FINE_LOCATION">位置权限：相机，打卡，前海合作区正在大搞建设，人民健康万岁cxgfd \n\n</string>
-    <string name="android.permission.CAMERA">相机权限：相机，打卡，前海合作区正在大搞建设，人民健康万岁3452542class Manifest \n\n</string>
-    <string name="android.permission.WRITE_EXTERNAL_STORAGE">储存访问权限：相机，打卡，前海合作区正在大搞建设，人民健康万岁sasaag314321 \n\n</string>
+
 
 </resources>

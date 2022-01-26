@@ -60,7 +60,6 @@ open class CameraConfig private constructor(val builder: Builder) : Parcelable {
             return this
         }
 
-
         fun build(): CameraConfig {
             return CameraConfig(this)
         }

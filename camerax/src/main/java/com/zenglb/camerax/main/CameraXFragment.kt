@@ -11,7 +11,6 @@ import android.hardware.display.DisplayManager
 import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.*
-import android.provider.Settings
 import android.util.DisplayMetrics
 import android.util.Log
 import android.util.Size
@@ -20,7 +19,6 @@ import android.webkit.MimeTypeMap
 import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.annotation.NonNull
-import androidx.appcompat.app.AlertDialog
 import androidx.camera.core.*
 import androidx.camera.core.ImageCapture.*
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -32,7 +30,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.LiveData
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.common.util.concurrent.ListenableFuture
-import com.yeyupiaoling.cameraxapp.view.CameraXPreviewViewTouchListener
+import com.zenglb.camerax.view.CameraXPreviewViewTouchListener
 import com.zenglb.camerax.R
 import com.zenglb.camerax.main.CameraConfig.Companion.CAMERA_FLASH_ALL_ON
 import com.zenglb.camerax.main.CameraConfig.Companion.MEDIA_MODE_PHOTO
@@ -62,7 +60,7 @@ private const val CAMERA_CONFIG = "camera_config"   //相机的配置
  *
  * setUpCamera() --> initCameraUseCases() --> bindCameraUseCase
  *
- * Android库发布至MavenCentral流程详解
+ * Android库发布托管至MavenCentral流程详解
  * https://juejin.cn/post/6953598441817636900
  */
 class CameraXFragment : Fragment() {
@@ -156,7 +154,7 @@ class CameraXFragment : Fragment() {
         } catch (e: Exception) {
             Toast.makeText(
                 getContext(),
-                "你需要在本Fragment 的宿主Activity中实现callback 对应的接口",
+                "你需要在本Fragment 的宿主Activity中实现 OnPermissionRequestListener",
                 Toast.LENGTH_LONG
             ).show()
         }
@@ -187,7 +185,6 @@ class CameraXFragment : Fragment() {
             }
         }
     }
-
 
     /**
      * 相机相关的状态初始化
@@ -487,6 +484,8 @@ class CameraXFragment : Fragment() {
                         Handler(Looper.getMainLooper()).post(Runnable {
                             bindCameraUseCase(TAKE_PHOTO_CASE)
                         })
+
+                        captureResultListener.onVideoRecorded("")
                     }
                 })
         }
@@ -576,6 +575,7 @@ class CameraXFragment : Fragment() {
                 })
             }
 
+        // 供应商拓展等后面再加上吧
 
         //再次重新绑定前应该先解绑 , imageAnalyzer
         cameraProvider?.unbindAll()
@@ -613,6 +613,10 @@ class CameraXFragment : Fragment() {
     }
 
 
+    /**
+     * 标示拍照触发成功了
+     *
+     */
     private fun indicateTakePhoto(){
         if (CameraSelector.LENS_FACING_BACK == lensFacing) {
             indicateSuccess(20)
@@ -651,7 +655,8 @@ class CameraXFragment : Fragment() {
             imageCapture.takePicture(
                 outputOptions, cameraExecutor, object : OnImageSavedCallback {
                     override fun onError(exc: ImageCaptureException) {
-                        Log.e(TAG, "Photo capture failed: ${exc.message}", exc)
+                        Log.e(TAG, "Photo capture failed:-----------------\n\n ${exc.message}", exc)
+                        captureResultListener.onPhotoTaken("")
                     }
 
                     override fun onImageSaved(output: OutputFileResults) {
@@ -807,6 +812,7 @@ class CameraXFragment : Fragment() {
         private const val PERMISSIONS_REQUEST_CODE = 1619
         private const val RATIO_4_3_VALUE = 4.0 / 3.0
         private const val RATIO_16_9_VALUE = 16.0 / 9.0
+
 
         private var REQUIRED_PERMISSIONS = arrayOf(
             Manifest.permission.CAMERA,

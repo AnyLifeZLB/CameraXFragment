@@ -12,6 +12,9 @@
         android:theme="@style/AppTheme"
         tools:ignore="AllowBackup">
 
+        <meta-data
+            android:name="com.amap.api.v2.apikey"
+            android:value="661e45f0f26dfcc129a5cbad4b476e46	"/>
 
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -26,13 +29,13 @@
 
         <activity android:name=".VideoPlayerActivity"/>
 
-        <activity android:name=".CameraXActivity">
+
+        <activity android:name=".uat.UatActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
 
 
     </application>

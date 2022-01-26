@@ -1,4 +1,4 @@
-package com.yeyupiaoling.cameraxapp.view
+package com.zenglb.camerax.view
 
 import android.content.Context
 import android.view.GestureDetector
@@ -32,7 +32,7 @@ class CameraXPreviewViewTouchListener(context: Context?) : OnTouchListener {
     }
 
     // 缩放监听
-    var onScaleGestureListener: OnScaleGestureListener = object : SimpleOnScaleGestureListener() {
+    private var onScaleGestureListener: OnScaleGestureListener = object : SimpleOnScaleGestureListener() {
         override fun onScale(detector: ScaleGestureDetector): Boolean {
             val delta = detector.scaleFactor
             if (mCustomTouchListener != null) {

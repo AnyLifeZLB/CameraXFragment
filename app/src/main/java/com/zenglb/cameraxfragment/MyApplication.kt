@@ -8,6 +8,7 @@ import android.app.Application
  * @author zlb
  */
  class MyApplication : Application(){
+
     /**
      * 伴生对象
      */
@@ -18,7 +19,6 @@ import android.app.Application
         val languageName: String? = null
 
         fun getStr():String{
-
             return "hello world"
         }
     }
@@ -29,6 +29,15 @@ import android.app.Application
     override fun onCreate() {
         super.onCreate()
         instance = this
+
+
+        var b: String? = "abc" // 可以设置为空
+        b = null // ok
+        print(b)
+
+        val l = b?.length // 错误：变量“b”可能为空
+
+
     }
 
 }
