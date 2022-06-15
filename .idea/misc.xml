@@ -9,6 +9,7 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="../../../../layout/custom_preview.xml" value="0.34322916666666664" />
+        <entry key="../../.gradle/caches/transforms-3/dae5d780528ef4ede66ecb65b9e20358/transformed/jetified-pictureselector-v3.0.3/res/drawable/ps_image_placeholder.xml" value="0.34427083333333336" />
         <entry key="app/src/main/res/drawable/bg_round_white.xml" value="0.18333333333333332" />
         <entry key="app/src/main/res/drawable/ic_baseline_flash_on_24.xml" value="0.27395833333333336" />
         <entry key="app/src/main/res/drawable/ic_flash_off_24.xml" value="0.27395833333333336" />
