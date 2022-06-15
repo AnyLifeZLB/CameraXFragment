@@ -6,10 +6,10 @@ apply plugin: 'kotlin-android-extensions'
 apply plugin: "com.vanniktech.maven.publish"
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion 28
 
     defaultConfig {
-        targetSdkVersion 30
+        targetSdkVersion 28
         minSdkVersion 21
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
@@ -46,7 +46,6 @@ android {
 dependencies {
 //    implementation fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
 
-
     //Zxing
     implementation 'com.google.zxing:core:3.3.2'
 
@@ -61,10 +60,10 @@ dependencies {
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.0'
 
     // CameraX View class
-    api 'androidx.camera:camera-view:1.0.0-alpha28'
+    api 'androidx.camera:camera-view:1.0.0-alpha24'
 
     // CameraX Extensions library
-    api("androidx.camera:camera-extensions:1.0.0-alpha28")
+    api("androidx.camera:camera-extensions:1.0.0-alpha23")
 
 
     // App compat and UI things
@@ -74,7 +73,7 @@ dependencies {
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
 
     // CameraX core library
-    def camera_version = '1.1.0-alpha08'
+    def camera_version = '1.1.0-alpha04'
     api "androidx.camera:camera-core:$camera_version"
 
     // CameraX Camera2 extensions

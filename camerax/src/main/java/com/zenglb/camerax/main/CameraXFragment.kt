@@ -261,7 +261,7 @@ class CameraXFragment : Fragment() {
 
         // 预览 Preview
         preview = Preview.Builder()
-            // 我们要去宽高比，但是没有分辨率
+            // 我们要去宽高比，但是没有 分辨率
             .setTargetAspectRatio(screenAspectRatio)
 //            .setTargetResolution(size)
             // 设置初始的旋转
@@ -271,12 +271,10 @@ class CameraXFragment : Fragment() {
         // ImageCapture
         imageCapture = ImageCapture.Builder()
             .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
-
             //设置初始目标旋转，如果旋转改变，我们将不得不再次调用它在此用例的生命周期中
             // Set initial target rotation, we will have to call this again if rotation changes
             // during the lifecycle of this use case
             .setTargetRotation(rotation)
-
             // 我们要求长宽比，但没有分辨率匹配预览配置，但让 CameraX优化为任何特定的解决方案，最适合我们的用例
             // We request aspect ratio but no resolution to match preview config, but letting
             // CameraX optimize for whatever specific resolution best fits our use cases

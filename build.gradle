@@ -3,7 +3,7 @@ buildscript {
     // Top-level variables used for versioning
 
     ext {
-        kotlin_version = "1.6.0"
+        kotlin_version = "1.6.10"
         java_version = JavaVersion.VERSION_1_8
         dokka_version = '1.4.10.2'
     }
@@ -15,7 +15,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.0.3'
+        classpath 'com.android.tools.build:gradle:7.1.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "org.jetbrains.kotlin:kotlin-android-extensions:$kotlin_version"
 
