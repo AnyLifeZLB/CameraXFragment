@@ -31,8 +31,7 @@
             android:exported="false"
             android:name=".VideoPlayerActivity"/>
 
-
-        <activity android:name=".uat.UatActivity"
+        <activity android:name=".CameraXActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

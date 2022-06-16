@@ -1,12 +1,8 @@
 package com.zenglb.cameraxfragment
 
 import android.Manifest
-import android.content.DialogInterface
 import android.content.Intent
-import android.content.pm.ActivityInfo
-import android.graphics.Color
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.util.Log
@@ -14,9 +10,6 @@ import android.view.KeyEvent
 import android.view.OrientationEventListener
 import android.view.Surface
 import android.view.View
-import android.widget.Toast
-import androidx.annotation.RequiresApi
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
@@ -174,6 +167,12 @@ class CameraXActivity : AppCompatActivity(), CameraXFragment.OnPermissionRequest
 //                    override fun onResult(result: ArrayList<LocalMedia?>?) {}
 //                    override fun onCancel() {}
 //                })
+
+
+            val intent = Intent(Intent.ACTION_PICK) //选择
+            intent.type = "image/*" //选择图片
+            startActivity(intent)
+
         }
 
         close_btn.setOnClickListener {
