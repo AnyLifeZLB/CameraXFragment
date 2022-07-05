@@ -2,24 +2,32 @@ package com.zenglb.camerax.main
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.*
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
-import android.graphics.Color
-import android.graphics.Point
+import android.graphics.*
 import android.graphics.drawable.ColorDrawable
 import android.hardware.display.DisplayManager
 import android.media.MediaScannerConnection
 import android.net.Uri
-import android.os.*
+import android.os.Build
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.DisplayMetrics
 import android.util.Log
 import android.util.Size
 import android.view.*
+import android.view.View.GONE
+import android.view.View.VISIBLE
 import android.webkit.MimeTypeMap
 import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.annotation.NonNull
 import androidx.camera.core.*
+import androidx.camera.core.Camera
 import androidx.camera.core.ImageCapture.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
@@ -30,13 +38,17 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.LiveData
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.common.util.concurrent.ListenableFuture
-import com.zenglb.camerax.view.CameraXPreviewViewTouchListener
 import com.zenglb.camerax.R
 import com.zenglb.camerax.main.CameraConfig.Companion.CAMERA_FLASH_ALL_ON
 import com.zenglb.camerax.main.CameraConfig.Companion.MEDIA_MODE_PHOTO
 import com.zenglb.camerax.utils.ANIMATION_SLOW_MILLIS
-import com.zenglb.camerax.utils.LuminosityAnalyzer
+import com.zenglb.camerax.view.CameraXPreviewViewTouchListener
 import kotlinx.android.synthetic.main.fragment_camerax.*
+import com.yeyupiaoling.ai.Face
+import com.yeyupiaoling.ai.FaceDetectionUtil
+import com.yeyupiaoling.ai.Utils
+import com.zenglb.camerax.utils.ConvertUtils
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
 import java.text.SimpleDateFormat
@@ -47,6 +59,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
+
 
 const val KEY_CAMERA_EVENT_ACTION = "key_camera_event_action"
 const val KEY_CAMERA_EVENT_EXTRA = "key_camera_event_extra"
@@ -72,7 +85,7 @@ class CameraXFragment : Fragment() {
 
     private lateinit var captureResultListener: CaptureResultListener
 
-    //相机的配置：存储路径，闪光灯模式，
+    //相机的配置：存储路径，闪光灯模式，后面加一些人工只能的东西
     private lateinit var cameraConfig: CameraConfig
 
 //    private var focusView: FocusImageView? = null
@@ -177,9 +190,9 @@ class CameraXFragment : Fragment() {
      * 需要添加的权限也一起申请了
      *
      */
-    fun addRequestPermission(permissions:Array<String>){
+    fun addRequestPermission(permissions: Array<String>) {
         permissions.forEach {
-            if(!REQUIRED_PERMISSIONS.contains(it)){
+            if (!REQUIRED_PERMISSIONS.contains(it)) {
                 REQUIRED_PERMISSIONS =
                     REQUIRED_PERMISSIONS.plus(permissions)
             }
@@ -198,7 +211,7 @@ class CameraXFragment : Fragment() {
         cameraPreview = cameraUIContainer.findViewById(R.id.camera_preview)
 
         // 初始化我们的后台执行器 Initialize our background executor
-        cameraExecutor = Executors.newSingleThreadExecutor()  //可能需要更多的处理
+        cameraExecutor = Executors.newSingleThreadExecutor()   //可能需要更多的处理
 
         broadcastManager = LocalBroadcastManager.getInstance(view.context)
 
@@ -554,28 +567,97 @@ class CameraXFragment : Fragment() {
 
 
     /**
+     * 口罩检测
+     *
+     */
+    private fun detection(bitmap: Bitmap) {
+//        val bitmap: Bitmap = mTextureView.getBitmap()
+        try {
+            val start = System.currentTimeMillis()
+            val result: Array<Face> =
+                FaceDetectionUtil.getInstance(this.context).predictImage(bitmap)
+            val end = System.currentTimeMillis()
+            Log.d("预测时间", "预测时间：" + (end - start) + "ms")
+            activity?.runOnUiThread(Runnable {
+                try {
+                    detection.visibility= VISIBLE
+
+                    if (result.isNotEmpty()) {
+                        val b: Bitmap = Utils.drawBitmap(
+                            FaceDetectionUtil.getInstance(this.context).getBitmap(), result
+                        )
+                        detection.setImageBitmap(b)
+                    } else {
+                        detection.setImageBitmap(
+                            FaceDetectionUtil.getInstance(this.context).getBitmap()
+                        )
+                    }
+                } catch (e: java.lang.Exception) {
+                    e.printStackTrace()
+                }
+            })
+
+        } catch (e: java.lang.Exception) {
+            e.printStackTrace()
+//            detection.visibility=GONE
+        }
+    }
+
+
+    /**
      * captureMode
      * 0：拍照
      * 1：拍视频
      */
     private fun bindCameraUseCase(captureMode: Int) {
+        //分析是否是二维码
+//        val imageAnalyzer = ImageAnalysis.Builder()
+//            // enable the following line if RGBA output is needed.
+//            // .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
+//            .setTargetResolution(Size(1280, 720))
+//            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+//            .build()
+//            .also {
+//                it.setAnalyzer(cameraExecutor, LuminosityAnalyzer { luma ->
+//                    Log.d(TAG, "Average luminosity: $luma")
+//                })
+//            }
 
-        //图像分析，我们还不用，仅仅用于练习，正式打包的时候去除！！！
+
+        //是否戴口罩的分析。
         val imageAnalyzer = ImageAnalysis.Builder()
             // enable the following line if RGBA output is needed.
-            // .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
+//             .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
             .setTargetResolution(Size(1280, 720))
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
             .build()
-            .also {
-                it.setAnalyzer(cameraExecutor, LuminosityAnalyzer { luma ->
-                    Log.d(TAG, "Average luminosity: $luma")
-                })
-            }
 
-        // 供应商拓展等后面再加上吧
 
-        //再次重新绑定前应该先解绑 , imageAnalyzer
+        //定时间隔抓取帧数据分析预测，子线程
+        imageAnalyzer.setAnalyzer(
+            cameraExecutor,
+            ImageAnalysis.Analyzer(fun(imageProxy: ImageProxy) {
+                val rotationDegrees = imageProxy.imageInfo.rotationDegrees
+                // insert your code here.
+
+                if (imageProxy.format != ImageFormat.YUV_420_888) {
+                    throw IllegalArgumentException("Invalid image format")
+                }
+
+
+                detection(ConvertUtils.getBitmap(imageProxy!!)!!)  //检测图片
+
+                Thread.currentThread().name
+
+                //after done, release the ImageProxy object
+                imageProxy.close()
+            })
+        )
+
+
+        // 供应商拓展等后面再加上吧。
+
+        // 再次重新绑定前应该先解绑,imageAnalyzer
         cameraProvider?.unbindAll()
         try {
             //目前一次无法绑定拍照和摄像一起
@@ -583,10 +665,11 @@ class CameraXFragment : Fragment() {
                 //拍照预览的时候尝试图片分析
                 TAKE_PHOTO_CASE -> {
                     camera = cameraProvider?.bindToLifecycle(
-                        this, cameraSelector, preview, imageCapture
+                        this, cameraSelector, preview, imageCapture, imageAnalyzer
                     )
                 }
 
+                //
                 TAKE_VIDEO_CASE -> {
                     camera = cameraProvider?.bindToLifecycle(
                         this, cameraSelector, preview, videoCapture
@@ -603,6 +686,25 @@ class CameraXFragment : Fragment() {
 
 
     /**
+     * 旋转图片
+     *
+     * @param angle
+     * @param bitmap
+     * @return Bitmap
+     */
+    fun rotaingBitmap(angle: Int, bitmap: Bitmap): Bitmap? {
+        //旋转图片 动作
+        val matrix = Matrix()
+        matrix.postRotate(angle.toFloat())
+        // 创建新的图片
+        return Bitmap.createBitmap(
+            bitmap, 0, 0,
+            bitmap.width, bitmap.height, matrix, true
+        )
+    }
+
+
+    /**
      * 获取是前置还是后置模式
      *
      */
@@ -615,7 +717,7 @@ class CameraXFragment : Fragment() {
      * 标示拍照触发成功了
      *
      */
-    private fun indicateTakePhoto(){
+    private fun indicateTakePhoto() {
         if (CameraSelector.LENS_FACING_BACK == lensFacing) {
             indicateSuccess(20)
         } else {
@@ -745,7 +847,8 @@ class CameraXFragment : Fragment() {
             )
 
             if (checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
-                == PackageManager.PERMISSION_GRANTED) {
+                == PackageManager.PERMISSION_GRANTED
+            ) {
                 setUpCamera()
             }
 
@@ -784,7 +887,7 @@ class CameraXFragment : Fragment() {
 
             for (index in permissions.indices) {
                 if (grantResults[index] == PackageManager.PERMISSION_DENIED) {
-                    permissionsDeny=permissionsDeny.plusElement(permissions[index])
+                    permissionsDeny = permissionsDeny.plusElement(permissions[index])
                 }
                 when (permissions[index]) {
                     Manifest.permission.CAMERA -> {
@@ -795,7 +898,7 @@ class CameraXFragment : Fragment() {
                     }
                 }
             }
-            permissionRequestListener?.onAfterPermissionDeny(permissionsDeny,requestCode)
+            permissionRequestListener?.onAfterPermissionDeny(permissionsDeny, requestCode)
         }
     }
 
