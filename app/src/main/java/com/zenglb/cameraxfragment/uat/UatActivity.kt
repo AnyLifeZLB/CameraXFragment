@@ -13,6 +13,7 @@ import android.view.Surface
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.camera.core.CameraSelector
 import androidx.core.content.FileProvider
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.amap.api.location.*
@@ -72,6 +73,7 @@ class UatActivity : AppCompatActivity(), CameraXFragment.OnPermissionRequestList
             .flashMode(CameraConfig.CAMERA_FLASH_OFF)
             .mediaMode(CameraConfig.MEDIA_MODE_ALL)   //视频拍照都可以
             .cacheMediasDir(cacheMediasDir)
+            .lensFacing(CameraSelector.LENS_FACING_FRONT)
             .build()
 
         cameraXFragment = CameraXFragment.newInstance(cameraConfig)

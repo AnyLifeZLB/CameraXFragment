@@ -18,6 +18,7 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.camera.core.CameraSelector
 import androidx.core.content.FileProvider
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.bumptech.glide.Glide
@@ -58,6 +59,7 @@ class CameraXActivity : AppCompatActivity(), CameraXFragment.OnPermissionRequest
             .flashMode(CameraConfig.CAMERA_FLASH_OFF)
             .mediaMode(CameraConfig.MEDIA_MODE_ALL)   //视频拍照都可以
             .cacheMediasDir(cacheMediasDir)
+            .lensFacing(CameraSelector.LENS_FACING_FRONT)
             .build()
 
         cameraXFragment = CameraXFragment.newInstance(cameraConfig)

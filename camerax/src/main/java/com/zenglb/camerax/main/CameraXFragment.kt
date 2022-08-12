@@ -44,9 +44,9 @@ import com.zenglb.camerax.main.CameraConfig.Companion.MEDIA_MODE_PHOTO
 import com.zenglb.camerax.utils.ANIMATION_SLOW_MILLIS
 import com.zenglb.camerax.view.CameraXPreviewViewTouchListener
 import kotlinx.android.synthetic.main.fragment_camerax.*
-import com.yeyupiaoling.ai.Face
-import com.yeyupiaoling.ai.FaceDetectionUtil
-import com.yeyupiaoling.ai.Utils
+//import com.yeyupiaoling.ai.Face
+//import com.yeyupiaoling.ai.FaceDetectionUtil
+//import com.yeyupiaoling.ai.Utils
 import com.zenglb.camerax.utils.ConvertUtils
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -238,12 +238,18 @@ class CameraXFragment : Fragment() {
             //CameraProvider
             cameraProvider = cameraProviderFuture.get()
 
-            //先默认是后置的摄像头，没有后面的再切换到前面的来
-            lensFacing = when {
-                hasBackCamera() -> CameraSelector.LENS_FACING_BACK
-                hasFrontCamera() -> CameraSelector.LENS_FACING_FRONT
-                else -> throw IllegalStateException("Back and front camera are unavailable")
+
+            lensFacing = if(cameraConfig.lensFacing==CameraSelector.LENS_FACING_FRONT
+                && hasFrontCamera()){
+                cameraConfig.lensFacing
+            }else{
+                when {
+                    hasBackCamera() -> CameraSelector.LENS_FACING_BACK
+                    hasFrontCamera() -> CameraSelector.LENS_FACING_FRONT
+                    else -> throw IllegalStateException("Back and front camera are unavailable")
+                }
             }
+
 
             // Build and bind the camera use cases
             initCameraUseCases()
@@ -571,36 +577,35 @@ class CameraXFragment : Fragment() {
      *
      */
     private fun detection(bitmap: Bitmap) {
-//        val bitmap: Bitmap = mTextureView.getBitmap()
-        try {
-            val start = System.currentTimeMillis()
-            val result: Array<Face> =
-                FaceDetectionUtil.getInstance(this.context).predictImage(bitmap)
-            val end = System.currentTimeMillis()
-            Log.d("预测时间", "预测时间：" + (end - start) + "ms")
-            activity?.runOnUiThread(Runnable {
-                try {
-                    detection.visibility= VISIBLE
-
-                    if (result.isNotEmpty()) {
-                        val b: Bitmap = Utils.drawBitmap(
-                            FaceDetectionUtil.getInstance(this.context).getBitmap(), result
-                        )
-                        detection.setImageBitmap(b)
-                    } else {
-                        detection.setImageBitmap(
-                            FaceDetectionUtil.getInstance(this.context).getBitmap()
-                        )
-                    }
-                } catch (e: java.lang.Exception) {
-                    e.printStackTrace()
-                }
-            })
-
-        } catch (e: java.lang.Exception) {
-            e.printStackTrace()
-//            detection.visibility=GONE
-        }
+//        try {
+//            val start = System.currentTimeMillis()
+//            val result: Array<Face> =
+//                FaceDetectionUtil.getInstance(this.context).predictImage(bitmap)
+//            val end = System.currentTimeMillis()
+//            Log.d("预测时间", "预测时间：" + (end - start) + "ms")
+//            activity?.runOnUiThread(Runnable {
+//                try {
+//                    detection.visibility= VISIBLE
+//
+//                    if (result.isNotEmpty()) {
+//                        val b: Bitmap = Utils.drawBitmap(
+//                            FaceDetectionUtil.getInstance(this.context).getBitmap(), result
+//                        )
+//                        detection.setImageBitmap(b)
+//                    } else {
+//                        detection.setImageBitmap(
+//                            FaceDetectionUtil.getInstance(this.context).getBitmap()
+//                        )
+//                    }
+//                } catch (e: java.lang.Exception) {
+//                    e.printStackTrace()
+//                }
+//            })
+//
+//        } catch (e: java.lang.Exception) {
+//            e.printStackTrace()
+////            detection.visibility=GONE
+//        }
     }
 
 
@@ -624,35 +629,30 @@ class CameraXFragment : Fragment() {
 //            }
 
 
-        //是否戴口罩的分析。
-        val imageAnalyzer = ImageAnalysis.Builder()
-            // enable the following line if RGBA output is needed.
-//             .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
-            .setTargetResolution(Size(1280, 720))
-            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-            .build()
-
-
-        //定时间隔抓取帧数据分析预测，子线程
-        imageAnalyzer.setAnalyzer(
-            cameraExecutor,
-            ImageAnalysis.Analyzer(fun(imageProxy: ImageProxy) {
-                val rotationDegrees = imageProxy.imageInfo.rotationDegrees
-                // insert your code here.
-
-                if (imageProxy.format != ImageFormat.YUV_420_888) {
-                    throw IllegalArgumentException("Invalid image format")
-                }
-
-
-                detection(ConvertUtils.getBitmap(imageProxy!!)!!)  //检测图片
-
-                Thread.currentThread().name
-
-                //after done, release the ImageProxy object
-                imageProxy.close()
-            })
-        )
+//        //是否戴口罩的分析。
+//        val imageAnalyzer = ImageAnalysis.Builder()
+//            // enable the following line if RGBA output is needed.
+//            .setTargetResolution(Size(1280, 720))
+//            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+//            .build()
+//
+//
+//        //定时间隔抓取帧数据分析预测，子线程
+//        imageAnalyzer.setAnalyzer(
+//            cameraExecutor,
+//            ImageAnalysis.Analyzer(fun(imageProxy: ImageProxy) {
+//                val rotationDegrees = imageProxy.imageInfo.rotationDegrees
+//                // insert your code here.
+//
+//                if (imageProxy.format != ImageFormat.YUV_420_888) {
+//                    throw IllegalArgumentException("Invalid image format")
+//                }
+//
+////                detection(ConvertUtils.getBitmap(imageProxy!!)!!)  //检测图片
+//
+//                imageProxy.close()
+//            })
+//        )
 
 
         // 供应商拓展等后面再加上吧。
@@ -665,7 +665,7 @@ class CameraXFragment : Fragment() {
                 //拍照预览的时候尝试图片分析
                 TAKE_PHOTO_CASE -> {
                     camera = cameraProvider?.bindToLifecycle(
-                        this, cameraSelector, preview, imageCapture, imageAnalyzer
+                        this, cameraSelector, preview, imageCapture
                     )
                 }
 
