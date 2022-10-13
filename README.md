@@ -4,10 +4,11 @@
 
 
 2021/10/18
+
 Android 自定义相机要考虑的东西还是非常多的，特别是兼容性问题，每家手机厂商的相机方案还有差异，要是能像苹果一样有稳定统一的系统API组合使用就好了。
 尽管Camera 2已经替换了Camera1,但还是很难用，Google 爸爸给大家准备了CameraX，可以很方便的适配Android 5.0 + 机型来拍照，图片分析，拍摄视频
 
-简单的封装了拍照，录制视频的CameraXFragment,在真实项目中已经上线2个月了，目前情况稳定。
+简单的封装了拍照，录制视频的CameraXFragment,在真实项目中已经上线12个月了，目前情况稳定。
 
 
 
@@ -39,5 +40,6 @@ Android 自定义相机要考虑的东西还是非常多的，特别是兼容性
 
 
 ### 更多说明请下载体验Demo
+
 ![image](https://user-images.githubusercontent.com/15169396/142362234-4300c052-cee6-4a1d-b835-baab7ae9e9b6.png)
 
