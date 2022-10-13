@@ -21,9 +21,8 @@ Android 自定义相机要考虑的东西还是非常多的，特别是兼容性
 
    Second，   
    
-       implementation "io.github.anylifezlb:CameraXFragment:2.x.latest" //请根据version log 升级
-       
-       
+       implementation "io.github.anylifezlb:CameraXFragment:2.4.0" //请根据version log 升级
+
        
 ## 使用说明
 
