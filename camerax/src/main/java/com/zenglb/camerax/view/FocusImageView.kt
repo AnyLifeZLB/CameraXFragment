@@ -1,4 +1,4 @@
-package com.yeyupiaoling.cameraxapp.view
+package com.zenglb.camerax.view
 
 import android.content.Context
 import android.graphics.Point

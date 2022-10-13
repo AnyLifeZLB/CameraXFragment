@@ -2,15 +2,23 @@ package com.zenglb.camerax.main
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.*
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.graphics.Color
+import android.graphics.Matrix
 import android.graphics.Point
 import android.graphics.drawable.ColorDrawable
 import android.hardware.display.DisplayManager
 import android.media.MediaScannerConnection
 import android.net.Uri
-import android.os.*
+import android.os.Build
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.DisplayMetrics
 import android.util.Log
 import android.util.Size
@@ -30,12 +38,11 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.LiveData
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.common.util.concurrent.ListenableFuture
-import com.zenglb.camerax.view.CameraXPreviewViewTouchListener
 import com.zenglb.camerax.R
 import com.zenglb.camerax.main.CameraConfig.Companion.CAMERA_FLASH_ALL_ON
 import com.zenglb.camerax.main.CameraConfig.Companion.MEDIA_MODE_PHOTO
 import com.zenglb.camerax.utils.ANIMATION_SLOW_MILLIS
-import com.zenglb.camerax.utils.LuminosityAnalyzer
+import com.zenglb.camerax.view.CameraXPreviewViewTouchListener
 import kotlinx.android.synthetic.main.fragment_camerax.*
 import java.io.File
 import java.io.IOException
@@ -47,6 +54,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
+
 
 const val KEY_CAMERA_EVENT_ACTION = "key_camera_event_action"
 const val KEY_CAMERA_EVENT_EXTRA = "key_camera_event_extra"
@@ -72,7 +80,7 @@ class CameraXFragment : Fragment() {
 
     private lateinit var captureResultListener: CaptureResultListener
 
-    //相机的配置：存储路径，闪光灯模式，
+    //相机的配置：存储路径，闪光灯模式，后面加一些人工只能的东西
     private lateinit var cameraConfig: CameraConfig
 
 //    private var focusView: FocusImageView? = null
@@ -85,7 +93,6 @@ class CameraXFragment : Fragment() {
 
     private lateinit var cameraSelector: CameraSelector
 
-    private var displayId: Int = -1
     private var lensFacing: Int = CameraSelector.LENS_FACING_BACK
 
     private var preview: Preview? = null
@@ -98,11 +105,15 @@ class CameraXFragment : Fragment() {
 
 
     private val displayManager by lazy {
-        requireContext().getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
+        mContext.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
     }
 
     // 使用此执行器执行相机阻塞操作
     private lateinit var cameraExecutor: ExecutorService
+
+
+    private lateinit var mContext: Context
+
 
     //音量下降按钮接收器用于触发快门
     private val volumeDownReceiver = object : BroadcastReceiver() {
@@ -127,7 +138,7 @@ class CameraXFragment : Fragment() {
         override fun onDisplayAdded(displayId: Int) = Unit
         override fun onDisplayRemoved(displayId: Int) = Unit
         override fun onDisplayChanged(displayId: Int) = view?.let { view ->
-            if (displayId == this@CameraXFragment.displayId) {
+            if (displayId == view.display.displayId) {
                 Log.d(TAG, "Rotation changed: ${view.display.rotation}")
                 imageCapture?.targetRotation = view.display.rotation
                 imageAnalyzer?.targetRotation = view.display.rotation
@@ -147,6 +158,8 @@ class CameraXFragment : Fragment() {
 
     override fun onAttach(@NonNull context: Context) {
         super.onAttach(context)
+
+        mContext=context;
         // 要求该 Fragment 所附着的 Activity 必须实现这个方法, 工信部要求申请权限必须要给用户说明申请权限的用途
         // 一般是弹出一个dialog 的形式，具体的样式，相应的开发接入时候可以在接口实现中实现,你可以空实现
         try {
@@ -177,9 +190,9 @@ class CameraXFragment : Fragment() {
      * 需要添加的权限也一起申请了
      *
      */
-    fun addRequestPermission(permissions:Array<String>){
+    fun addRequestPermission(permissions: Array<String>) {
         permissions.forEach {
-            if(!REQUIRED_PERMISSIONS.contains(it)){
+            if (!REQUIRED_PERMISSIONS.contains(it)) {
                 REQUIRED_PERMISSIONS =
                     REQUIRED_PERMISSIONS.plus(permissions)
             }
@@ -198,7 +211,7 @@ class CameraXFragment : Fragment() {
         cameraPreview = cameraUIContainer.findViewById(R.id.camera_preview)
 
         // 初始化我们的后台执行器 Initialize our background executor
-        cameraExecutor = Executors.newSingleThreadExecutor()  //可能需要更多的处理
+        cameraExecutor = Executors.newSingleThreadExecutor()   //可能需要更多的处理
 
         broadcastManager = LocalBroadcastManager.getInstance(view.context)
 
@@ -220,22 +233,26 @@ class CameraXFragment : Fragment() {
      * Initialize CameraX, and prepare to bind the camera use cases
      */
     private fun setUpCamera() {
-        val cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(mContext)
         cameraProviderFuture.addListener(Runnable {
             //CameraProvider
             cameraProvider = cameraProviderFuture.get()
 
-            //先默认是后置的摄像头，没有后面的再切换到前面的来
-            lensFacing = when {
-                hasBackCamera() -> CameraSelector.LENS_FACING_BACK
-                hasFrontCamera() -> CameraSelector.LENS_FACING_FRONT
-                else -> throw IllegalStateException("Back and front camera are unavailable")
+            lensFacing = if(cameraConfig.lensFacing==CameraSelector.LENS_FACING_FRONT
+                && hasFrontCamera()){
+                cameraConfig.lensFacing
+            }else{
+                when {
+                    hasBackCamera() -> CameraSelector.LENS_FACING_BACK
+                    hasFrontCamera() -> CameraSelector.LENS_FACING_FRONT
+                    else -> throw IllegalStateException("Back and front camera are unavailable")
+                }
             }
 
             // Build and bind the camera use cases
             initCameraUseCases()
 
-        }, ContextCompat.getMainExecutor(requireContext()))
+        }, ContextCompat.getMainExecutor(mContext))
     }
 
 
@@ -261,7 +278,7 @@ class CameraXFragment : Fragment() {
 
         // 预览 Preview
         preview = Preview.Builder()
-            // 我们要去宽高比，但是没有分辨率
+            // 我们要去宽高比，但是没有 分辨率
             .setTargetAspectRatio(screenAspectRatio)
 //            .setTargetResolution(size)
             // 设置初始的旋转
@@ -271,12 +288,10 @@ class CameraXFragment : Fragment() {
         // ImageCapture
         imageCapture = ImageCapture.Builder()
             .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
-
             //设置初始目标旋转，如果旋转改变，我们将不得不再次调用它在此用例的生命周期中
             // Set initial target rotation, we will have to call this again if rotation changes
             // during the lifecycle of this use case
             .setTargetRotation(rotation)
-
             // 我们要求长宽比，但没有分辨率匹配预览配置，但让 CameraX优化为任何特定的解决方案，最适合我们的用例
             // We request aspect ratio but no resolution to match preview config, but letting
             // CameraX optimize for whatever specific resolution best fits our use cases
@@ -370,7 +385,7 @@ class CameraXFragment : Fragment() {
                     } catch (e: java.lang.Exception) {
                         Log.e(TAG, e.toString())
                     }
-                }, ContextCompat.getMainExecutor(this@CameraXFragment.requireContext()))
+                }, ContextCompat.getMainExecutor(mContext))
             }
 
             // 双击操作
@@ -454,7 +469,7 @@ class CameraXFragment : Fragment() {
             .build()
 
         //开始录像,需要多一个权限
-        if (checkSelfPermission(requireContext(), Manifest.permission.RECORD_AUDIO)
+        if (checkSelfPermission(mContext, Manifest.permission.RECORD_AUDIO)
             != PackageManager.PERMISSION_GRANTED
         ) {
             permissionRequestListener?.onBeforePermissionRequest(
@@ -555,6 +570,8 @@ class CameraXFragment : Fragment() {
     }
 
 
+
+
     /**
      * captureMode
      * 0：拍照
@@ -562,22 +579,7 @@ class CameraXFragment : Fragment() {
      */
     private fun bindCameraUseCase(captureMode: Int) {
 
-        //图像分析，我们还不用，仅仅用于练习，正式打包的时候去除！！！
-        val imageAnalyzer = ImageAnalysis.Builder()
-            // enable the following line if RGBA output is needed.
-            // .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
-            .setTargetResolution(Size(1280, 720))
-            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-            .build()
-            .also {
-                it.setAnalyzer(cameraExecutor, LuminosityAnalyzer { luma ->
-                    Log.d(TAG, "Average luminosity: $luma")
-                })
-            }
-
-        // 供应商拓展等后面再加上吧
-
-        //再次重新绑定前应该先解绑 , imageAnalyzer
+        // 再次重新绑定前应该先解绑,imageAnalyzer
         cameraProvider?.unbindAll()
         try {
             //目前一次无法绑定拍照和摄像一起
@@ -589,6 +591,7 @@ class CameraXFragment : Fragment() {
                     )
                 }
 
+                //
                 TAKE_VIDEO_CASE -> {
                     camera = cameraProvider?.bindToLifecycle(
                         this, cameraSelector, preview, videoCapture
@@ -605,6 +608,25 @@ class CameraXFragment : Fragment() {
 
 
     /**
+     * 旋转图片
+     *
+     * @param angle
+     * @param bitmap
+     * @return Bitmap
+     */
+    fun rotaingBitmap(angle: Int, bitmap: Bitmap): Bitmap? {
+        //旋转图片 动作
+        val matrix = Matrix()
+        matrix.postRotate(angle.toFloat())
+        // 创建新的图片
+        return Bitmap.createBitmap(
+            bitmap, 0, 0,
+            bitmap.width, bitmap.height, matrix, true
+        )
+    }
+
+
+    /**
      * 获取是前置还是后置模式
      *
      */
@@ -617,7 +639,7 @@ class CameraXFragment : Fragment() {
      * 标示拍照触发成功了
      *
      */
-    private fun indicateTakePhoto(){
+    private fun indicateTakePhoto() {
         if (CameraSelector.LENS_FACING_BACK == lensFacing) {
             indicateSuccess(20)
         } else {
@@ -733,21 +755,23 @@ class CameraXFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_camerax, container, false)
     }
 
+
     /**
      * 有可能回来就取消了权限
      *
      */
-    override fun onStart() {
-        super.onStart()
-        if (!hasAllPermissions(requireContext())) {
+    override fun onResume() {
+        super.onResume()
+        if (!hasAllPermissions(mContext)) {
             //根据隐私合规要求，需要拦截检测哪些权限没有授权，并给予相应的温馨提示
             permissionRequestListener?.onBeforePermissionRequest(
                 REQUIRED_PERMISSIONS,
                 PERMISSIONS_REQUEST_CODE
             )
 
-            if (checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
-                == PackageManager.PERMISSION_GRANTED) {
+            if (checkSelfPermission(mContext, Manifest.permission.CAMERA)
+                == PackageManager.PERMISSION_GRANTED
+            ) {
                 setUpCamera()
             }
 
@@ -756,10 +780,11 @@ class CameraXFragment : Fragment() {
                 arrayOf(),
                 PERMISSIONS_REQUEST_CODE
             )
+
             // 等待所有的View 都能正确的显示出
             cameraPreview.post {
                 // Keep track of the display in which this view is attached
-                displayId = cameraPreview.display.displayId
+//                displayId = cameraPreview.display.displayId
                 // Set up the camera and its use cases
                 setUpCamera()
             }
@@ -786,7 +811,7 @@ class CameraXFragment : Fragment() {
 
             for (index in permissions.indices) {
                 if (grantResults[index] == PackageManager.PERMISSION_DENIED) {
-                    permissionsDeny=permissionsDeny.plusElement(permissions[index])
+                    permissionsDeny = permissionsDeny.plusElement(permissions[index])
                 }
                 when (permissions[index]) {
                     Manifest.permission.CAMERA -> {
@@ -797,7 +822,7 @@ class CameraXFragment : Fragment() {
                     }
                 }
             }
-            permissionRequestListener?.onAfterPermissionDeny(permissionsDeny,requestCode)
+            permissionRequestListener?.onAfterPermissionDeny(permissionsDeny, requestCode)
         }
     }
 
@@ -864,6 +889,7 @@ class CameraXFragment : Fragment() {
                     putParcelable(CAMERA_CONFIG, cameraConfig)
                 }
             }
+
     }
 
 

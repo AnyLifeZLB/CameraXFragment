@@ -11,12 +11,20 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <com.yeyupiaoling.cameraxapp.view.FocusImageView
+    <com.zenglb.camerax.view.FocusImageView
         android:id="@+id/focus_view"
         android:layout_width="75dp"
         android:layout_height="75dp"
         app:focus_fail_id="@drawable/focus_focus_failed"
         app:focus_focusing_id="@drawable/focus_focusing"
         app:focus_success_id="@drawable/focus_focused" />
+
+
+    <ImageView
+        android:id="@+id/detection"
+        android:layout_gravity="top"
+        android:layout_width="222dp"
+        android:layout_height="222dp"
+        android:visibility="visible" />
 
 </FrameLayout>

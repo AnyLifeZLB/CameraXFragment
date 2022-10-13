@@ -7,7 +7,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-//用于存放解码类型分类
+/**
+ * 二维码
+ *
+ */
 public final class DecodeFormatManager {
 
     public static final Set<BarcodeFormat> PRODUCT_FORMATS;

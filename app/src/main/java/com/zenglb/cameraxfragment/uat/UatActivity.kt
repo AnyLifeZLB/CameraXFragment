@@ -2,7 +2,6 @@ package com.zenglb.cameraxfragment.uat
 
 import android.Manifest
 import android.content.Intent
-import android.content.pm.ActivityInfo
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -14,6 +13,7 @@ import android.view.Surface
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.camera.core.CameraSelector
 import androidx.core.content.FileProvider
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.amap.api.location.*
@@ -28,10 +28,17 @@ import com.zenglb.camerax.main.CameraConfig.Companion.CAMERA_FLASH_ON
 import com.zenglb.cameraxfragment.R
 import com.zenglb.cameraxfragment.VideoPlayerActivity
 import com.zenglb.cameraxfragment.utils.PermissionTipsDialog
-import com.zhihu.matisse.Matisse
-import com.zhihu.matisse.MimeType
-import com.zhihu.matisse.engine.impl.GlideEngine
-import kotlinx.android.synthetic.main.activity_camera_x.*
+import kotlinx.android.synthetic.main.activity_camera_x.capture_btn
+import kotlinx.android.synthetic.main.activity_camera_x.close_btn
+import kotlinx.android.synthetic.main.activity_camera_x.flash_all_on
+import kotlinx.android.synthetic.main.activity_camera_x.flash_auto
+import kotlinx.android.synthetic.main.activity_camera_x.flash_layout
+import kotlinx.android.synthetic.main.activity_camera_x.flash_off
+import kotlinx.android.synthetic.main.activity_camera_x.flash_on
+import kotlinx.android.synthetic.main.activity_camera_x.flush_btn
+import kotlinx.android.synthetic.main.activity_camera_x.photo_view_btn
+import kotlinx.android.synthetic.main.activity_camera_x.switch_btn
+import kotlinx.android.synthetic.main.activity_uat.*
 import java.io.File
 
 
@@ -42,30 +49,31 @@ import java.io.File
  * 2.图片分析：无缝访问缓冲区以便在算法中使用，例如传入 MLKit
  * 3.切换为录制视频模式的时候还会闪屏黑屏
  * 4.要适配分区存储
- * 5.
+ * 5.15179785781 vivo Z1  V1986A
  *
  */
 class UatActivity : AppCompatActivity(), CameraXFragment.OnPermissionRequestListener {
     private var cacheMediasDir =
         Environment.getExternalStorageDirectory().toString() + "/cameraX/images/"
+
     private lateinit var cameraXFragment: CameraXFragment
     private lateinit var mOrientationListener: OrientationEventListener
 
     private lateinit var locationClient: AMapLocationClient
     private lateinit var locationOption: AMapLocationClientOption
 
-
     //有些应用希望能添加位置信息在水印上面
     private val perms = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_uat)
 
         val cameraConfig = CameraConfig.Builder()
             .flashMode(CameraConfig.CAMERA_FLASH_OFF)
             .mediaMode(CameraConfig.MEDIA_MODE_ALL)   //视频拍照都可以
             .cacheMediasDir(cacheMediasDir)
+            .lensFacing(CameraSelector.LENS_FACING_FRONT)
             .build()
 
         cameraXFragment = CameraXFragment.newInstance(cameraConfig)
@@ -76,7 +84,6 @@ class UatActivity : AppCompatActivity(), CameraXFragment.OnPermissionRequestList
 
 
         initLocation()
-
 
         //拍照，拍视频的UI 操作的各种状态处理
         capture_btn.setCaptureListener(object : CaptureListener {
@@ -130,6 +137,8 @@ class UatActivity : AppCompatActivity(), CameraXFragment.OnPermissionRequestList
                         .circleCrop()
                         .into(photo_view_btn)
                 }
+
+
             }
         })
 
@@ -143,7 +152,7 @@ class UatActivity : AppCompatActivity(), CameraXFragment.OnPermissionRequestList
             }
         }
 
-        //切换摄像头
+        //切换摄像头 ConstraintLayout
         switch_btn.setOnClickListener {
             //要保持闪光灯上一次的模式
             if (cameraXFragment.canSwitchCamera()) {
@@ -177,17 +186,16 @@ class UatActivity : AppCompatActivity(), CameraXFragment.OnPermissionRequestList
             cameraXFragment.setFlashMode(CAMERA_FLASH_ALL_ON)
         }
 
-
-        //去浏览媒体资源，使用的是知乎的开源库 Matisse，用法参考官方说明
         photo_view_btn.setOnClickListener {
-            Matisse.from(this@UatActivity)
-                .choose(MimeType.ofImage())
-                .countable(true)
-                .maxSelectable(9)
-                .restrictOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED)
-                .thumbnailScale(0.45f)
-                .imageEngine(GlideEngine())
-                .forResult(10000)
+
+//            PictureSelector.create(this)
+//                .openGallery(SelectMimeType.ofImage())
+//                .setImageEngine(GlideEngine.createGlideEngine())
+//                .forResult(object : OnResultCallbackListener<LocalMedia?> {
+//                    override fun onResult(result: ArrayList<LocalMedia?>?) {}
+//                    override fun onCancel() {}
+//                })
+
         }
 
         close_btn.setOnClickListener {
@@ -224,16 +232,16 @@ class UatActivity : AppCompatActivity(), CameraXFragment.OnPermissionRequestList
             }
         }
 
-        //还没有适配分区储存呢，估计短时间内没有办法了
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            if (!Environment.isExternalStorageLegacy()) {
-                Toast.makeText(
-                    baseContext,
-                    "检测到你的应用以分区存储特性运行，但CameraXFragment库还没有适配分区储存",
-                    Toast.LENGTH_LONG
-                ).show()
-            }
-        }
+//        //还没有适配分区储存呢，估计短时间内没有办法了
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+//            if (!Environment.isExternalStorageLegacy()) {
+//                Toast.makeText(
+//                    baseContext,
+//                    "检测到你的应用以分区存储特性运行，但CameraXFragment库还没有适配分区储存",
+//                    Toast.LENGTH_LONG
+//                ).show()
+//            }
+//        }
 
         startLocation()
 

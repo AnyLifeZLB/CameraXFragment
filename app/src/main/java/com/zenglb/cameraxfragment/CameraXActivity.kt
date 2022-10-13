@@ -18,6 +18,7 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.camera.core.CameraSelector
 import androidx.core.content.FileProvider
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.bumptech.glide.Glide
@@ -27,9 +28,6 @@ import com.zenglb.camerax.main.CameraConfig.Companion.CAMERA_FLASH_AUTO
 import com.zenglb.camerax.main.CameraConfig.Companion.CAMERA_FLASH_OFF
 import com.zenglb.camerax.main.CameraConfig.Companion.CAMERA_FLASH_ON
 import com.zenglb.cameraxfragment.utils.PermissionTipsDialog
-import com.zhihu.matisse.Matisse
-import com.zhihu.matisse.MimeType
-import com.zhihu.matisse.engine.impl.GlideEngine
 import kotlinx.android.synthetic.main.activity_camera_x.*
 import java.io.File
 
@@ -61,6 +59,7 @@ class CameraXActivity : AppCompatActivity(), CameraXFragment.OnPermissionRequest
             .flashMode(CameraConfig.CAMERA_FLASH_OFF)
             .mediaMode(CameraConfig.MEDIA_MODE_ALL)   //视频拍照都可以
             .cacheMediasDir(cacheMediasDir)
+            .lensFacing(CameraSelector.LENS_FACING_FRONT)
             .build()
 
         cameraXFragment = CameraXFragment.newInstance(cameraConfig)
@@ -167,16 +166,16 @@ class CameraXActivity : AppCompatActivity(), CameraXFragment.OnPermissionRequest
         }
 
 
-        //去浏览媒体资源，使用的是知乎的开源库 Matisse，用法参考官方说明
+        //去相册
         photo_view_btn.setOnClickListener {
-            Matisse.from(this@CameraXActivity)
-                .choose(MimeType.ofImage())
-                .countable(true)
-                .maxSelectable(9)
-                .restrictOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED)
-                .thumbnailScale(0.45f)
-                .imageEngine(GlideEngine())
-                .forResult(10000)
+//            PictureSelector.create(this)
+//                .openGallery(SelectMimeType.ofImage())
+//                .setImageEngine(GlideEngine.createGlideEngine())
+//                .setQuerySandboxDir(cacheMediasDir) //只是指定的目录
+//                .forResult(object : OnResultCallbackListener<LocalMedia?> {
+//                    override fun onResult(result: ArrayList<LocalMedia?>?) {}
+//                    override fun onCancel() {}
+//                })
         }
 
         close_btn.setOnClickListener {
@@ -213,12 +212,12 @@ class CameraXActivity : AppCompatActivity(), CameraXFragment.OnPermissionRequest
             }
         }
 
-        //还没有适配分区储存呢，估计短时间内没有办法了
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            if(!Environment.isExternalStorageLegacy()){
-                Toast.makeText(baseContext,"检测到你的应用以分区存储特性运行，但CameraXFragment库还没有适配分区储存",Toast.LENGTH_LONG).show()
-            }
-        }
+//        //还没有适配分区储存呢，估计短时间内没有办法了
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+//            if(!Environment.isExternalStorageLegacy()){
+//                Toast.makeText(baseContext,"检测到你的应用以分区存储特性运行，但CameraXFragment库还没有适配分区储存",Toast.LENGTH_LONG).show()
+//            }
+//        }
 
     }
 
@@ -247,6 +246,7 @@ class CameraXActivity : AppCompatActivity(), CameraXFragment.OnPermissionRequest
         flash_layout.visibility = View.INVISIBLE
         switch_btn.visibility = View.VISIBLE
     }
+
 
 
     /**
@@ -301,7 +301,7 @@ class CameraXActivity : AppCompatActivity(), CameraXFragment.OnPermissionRequest
      *
      */
     override fun onAfterPermissionDeny(permissions: Array<String>, requestCode: Int) {
-        val a = 1;
+
     }
 
 }

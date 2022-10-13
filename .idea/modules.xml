@@ -4,7 +4,13 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/CameraXFragment.iml" filepath="$PROJECT_DIR$/.idea/modules/CameraXFragment.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/CameraXFragment.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/CameraXFragment.app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/CameraXFragment.app.androidTest.iml" filepath="$PROJECT_DIR$/.idea/modules/app/CameraXFragment.app.androidTest.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/CameraXFragment.app.main.iml" filepath="$PROJECT_DIR$/.idea/modules/app/CameraXFragment.app.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/CameraXFragment.app.unitTest.iml" filepath="$PROJECT_DIR$/.idea/modules/app/CameraXFragment.app.unitTest.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/camerax/CameraXFragment.camerax.iml" filepath="$PROJECT_DIR$/.idea/modules/camerax/CameraXFragment.camerax.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/camerax/CameraXFragment.camerax.androidTest.iml" filepath="$PROJECT_DIR$/.idea/modules/camerax/CameraXFragment.camerax.androidTest.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/camerax/CameraXFragment.camerax.main.iml" filepath="$PROJECT_DIR$/.idea/modules/camerax/CameraXFragment.camerax.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/camerax/CameraXFragment.camerax.unitTest.iml" filepath="$PROJECT_DIR$/.idea/modules/camerax/CameraXFragment.camerax.unitTest.iml" />
     </modules>
   </component>
 </project>
