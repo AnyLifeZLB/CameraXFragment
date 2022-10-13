@@ -11,10 +11,6 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/camerax/CameraXFragment.camerax.androidTest.iml" filepath="$PROJECT_DIR$/.idea/modules/camerax/CameraXFragment.camerax.androidTest.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/camerax/CameraXFragment.camerax.main.iml" filepath="$PROJECT_DIR$/.idea/modules/camerax/CameraXFragment.camerax.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/camerax/CameraXFragment.camerax.unitTest.iml" filepath="$PROJECT_DIR$/.idea/modules/camerax/CameraXFragment.camerax.unitTest.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/maskdetection/CameraXFragment.maskdetection.iml" filepath="$PROJECT_DIR$/.idea/modules/maskdetection/CameraXFragment.maskdetection.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/maskdetection/CameraXFragment.maskdetection.androidTest.iml" filepath="$PROJECT_DIR$/.idea/modules/maskdetection/CameraXFragment.maskdetection.androidTest.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/maskdetection/CameraXFragment.maskdetection.main.iml" filepath="$PROJECT_DIR$/.idea/modules/maskdetection/CameraXFragment.maskdetection.main.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/maskdetection/CameraXFragment.maskdetection.unitTest.iml" filepath="$PROJECT_DIR$/.idea/modules/maskdetection/CameraXFragment.maskdetection.unitTest.iml" />
     </modules>
   </component>
 </project>
